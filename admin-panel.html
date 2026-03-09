@@ -337,7 +337,7 @@
 <script>
 // ===== CONFIG =====
 const STORAGE_KEY = 'quizScriptUrl';
-let SCRIPT_URL = localStorage.getItem(STORAGE_KEY) || '';
+let SCRIPT_URL = localStorage.getItem(STORAGE_KEY) || 'https://script.google.com/macros/s/AKfycbxEfxf8AcgQKvfc2ZMv6JoDZGK791QVHs6PhR_FRPcqbsmjWSjkH4ET51dCM3_Jx3IO6g/exec';
 let questions = [];
 let correctAnswer = null;
 let cachedResults = [];
@@ -346,7 +346,6 @@ let cachedResults = [];
 window.addEventListener('DOMContentLoaded', () => {
   const now = new Date();
   document.getElementById('questionDate').value = now.toISOString().split('T')[0];
-  if (!SCRIPT_URL) { showSetup(); return; }
   document.getElementById('setupOverlay').classList.add('hidden');
   loadAll();
 });
@@ -589,7 +588,12 @@ async function clearResults(){
 async function clearDeviceLocks(){
   if(!confirm('هل تريد فتح قفل جميع الأجهزة؟')) return;
   showLoading('جاري الفتح...');
-  try{ await apiPost({action:'clearLocks'}); updateStats(); }catch(e){}
+  try{
+    await apiPost({action:'clearLocks'});
+    // Clear local cache too
+    localStorage.removeItem('__playedLog');
+    updateStats();
+  }catch(e){}
   hideLoading();
   alert('✅ تم فتح قفل جميع الأجهزة');
 }
