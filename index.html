@@ -254,6 +254,7 @@
     <div class="next-countdown" id="nextCountdown" style="display:none">
       <div class="next-label">⏰ الوقت المتبقي للسؤال القادم</div>
       <div class="next-time" id="nextTimeDisplay">--:--:--</div>
+      <div id="windowInfoBadge" style="display:none;margin-top:12px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);border-radius:8px;padding:8px 16px;font-size:0.85rem;color:var(--gold);font-weight:700;letter-spacing:1px;"></div>
     </div>
   </div>
 
@@ -372,22 +373,37 @@ function saveResult(isCorrect,chosenOpt,usedSeconds,disqualified){
   }catch(e){}
 }
 
-// MAIN LOOP
+// MAIN LOOP — checks visibility window (endDatetime) only
 function checkForActiveQuestion(){
   if(locked||!playerName)return;
   const qs=getQuestions(), now=Date.now();
   for(const q of qs){
-    const start=new Date(q.datetime).getTime();
-    const end=start+q.duration*1000;
-    if(now>=start&&now<end){
-      if(!currentQuestion||currentQuestion.id!==q.id){ questionStartTime=start; startQuestion(q,Math.floor((end-now)/1000)); }
+    const winStart=new Date(q.datetime).getTime();
+    const winEnd=q.endDatetime ? new Date(q.endDatetime).getTime() : winStart + (q.answerSeconds||30)*1000;
+    // Within visibility window?
+    if(now>=winStart && now<winEnd){
+      if(!currentQuestion||currentQuestion.id!==q.id){
+        questionStartTime=now; // personal timer starts from NOW (when user enters)
+        startQuestion(q);
+      }
       return;
     }
   }
   if(questionActive) endQuestion();
   const upcoming=qs.filter(q=>new Date(q.datetime).getTime()>now).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
-  if(upcoming.length){ document.getElementById('nextCountdown').style.display='block'; updateCountdown(new Date(upcoming[0].datetime).getTime()); }
-  else document.getElementById('nextCountdown').style.display='none';
+  if(upcoming.length){
+    document.getElementById('nextCountdown').style.display='block';
+    updateCountdown(new Date(upcoming[0].datetime).getTime());
+    const nq=upcoming[0];
+    const sT=nq.timeStart||new Date(nq.datetime).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+    const eT=nq.timeEnd||(nq.endDatetime?new Date(nq.endDatetime).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'}):'');
+    const wi=document.getElementById('windowInfoBadge');
+    if(wi&&eT){wi.innerHTML=`<span style="color:var(--gold)">🟢 ${sT}</span> &nbsp;←&nbsp; <span style="color:var(--red)">🔴 ${eT}</span>`;wi.style.display='block';}
+  } else {
+    document.getElementById('nextCountdown').style.display='none';
+    const wi=document.getElementById('windowInfoBadge');
+    if(wi) wi.style.display='none';
+  }
 }
 
 function updateCountdown(t){
@@ -397,8 +413,12 @@ function updateCountdown(t){
   document.getElementById('nextTimeDisplay').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 
-function startQuestion(q,remaining){
-  currentQuestion=q; questionActive=true; answered=false; locked=false; timeLeft=remaining;
+function startQuestion(q){
+  currentQuestion=q; questionActive=true; answered=false; locked=false;
+  // Personal answer timer = answerSeconds (fixed per question by admin)
+  const personalTimer = q.answerSeconds || q.duration || 30;
+  timeLeft = personalTimer;
+
   document.getElementById('waitingState').style.display='none';
   document.getElementById('resultState').classList.remove('show');
   document.getElementById('questionState').classList.add('show');
@@ -409,7 +429,7 @@ function startQuestion(q,remaining){
   document.getElementById('textC').textContent=q.optC;
   document.getElementById('textD').textContent=q.optD;
   ['A','B','C','D'].forEach(l=>{ const b=document.getElementById('btn'+l); b.disabled=false; b.className='opt-btn'; });
-  startTimer(q.duration,remaining);
+  startTimer(personalTimer, personalTimer);
 }
 
 function startTimer(total,remaining){
@@ -431,7 +451,8 @@ function answer(opt){
   if(answered||!questionActive)return;
   answered=true; questionActive=false; clearInterval(timerInterval);
   const correct=currentQuestion.correct, isCorrect=opt===correct;
-  const usedSec=currentQuestion.duration-timeLeft;
+  const personalTimer = currentQuestion.answerSeconds || currentQuestion.duration || 30;
+  const usedSec = personalTimer - timeLeft;
   ['A','B','C','D'].forEach(l=>{ const b=document.getElementById('btn'+l); b.disabled=true; if(l===correct)b.classList.add('correct'); else if(l===opt&&!isCorrect)b.classList.add('wrong'); });
   saveResult(isCorrect,opt,usedSec,false);
   setTimeout(()=>showResult(isCorrect,correct,false,usedSec),1500);
@@ -439,9 +460,10 @@ function answer(opt){
 
 function timeUp(){
   if(answered)return; answered=true; questionActive=false;
+  const personalTimer = currentQuestion.answerSeconds || currentQuestion.duration || 30;
   ['A','B','C','D'].forEach(l=>{ const b=document.getElementById('btn'+l); b.disabled=true; if(l===currentQuestion.correct)b.classList.add('correct'); });
-  saveResult(false,null,currentQuestion.duration,false);
-  setTimeout(()=>showResult(false,currentQuestion.correct,true,currentQuestion.duration),1200);
+  saveResult(false,null,personalTimer,false);
+  setTimeout(()=>showResult(false,currentQuestion.correct,true,personalTimer),1200);
 }
 
 function showResult(isCorrect,correctOpt,timeup,usedSec){
