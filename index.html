@@ -288,6 +288,46 @@ function setLocalPlayed(qId, data) {
 }
 function getLocalPlayed(qId) { return getLocalPlayedLog()[getDeviceId()+'_'+qId]||null; }
 
+// ===== SMART CACHE =====
+// الأسئلة تُحمَّل من Sheets مرة واحدة وتُحفظ محلياً
+// الفتحات التالية تقرأ من الكاش فوراً — Sheets يُحدَّث في الخلفية
+const Q_CACHE_KEY = '__qCache';
+const Q_CACHE_TTL = 60 * 60 * 1000; // ساعة كحد أقصى للكاش
+
+function getCachedQuestions() {
+  try {
+    const c = JSON.parse(localStorage.getItem(Q_CACHE_KEY) || 'null');
+    if (!c) return null;
+    // استخدم الكاش حتى لو قديم — سيُحدَّث في الخلفية
+    return c.data || null;
+  } catch { return null; }
+}
+
+function setCachedQuestions(data) {
+  try {
+    localStorage.setItem(Q_CACHE_KEY, JSON.stringify({ data, ts: Date.now() }));
+  } catch(e) {}
+}
+
+function isCacheStale() {
+  try {
+    const c = JSON.parse(localStorage.getItem(Q_CACHE_KEY) || 'null');
+    if (!c) return true;
+    return (Date.now() - c.ts) > Q_CACHE_TTL;
+  } catch { return true; }
+}
+
+async function fetchAndCacheQuestions() {
+  try {
+    const fresh = await apiGet('getQuestions');
+    if (Array.isArray(fresh)) {
+      setCachedQuestions(fresh);
+      return fresh;
+    }
+  } catch(e) {}
+  return null;
+}
+
 // ===== STATE =====
 let playerName='', currentQuestion=null, timerInterval=null;
 let timeLeft=30, answered=false, questionActive=false, locked=false;
@@ -360,16 +400,31 @@ async function checkAlreadyPlayedOnLoad() {
 
 // ===== INIT =====
 async function init() {
-  try { allQuestions = await apiGet('getQuestions'); } catch(e) { allQuestions=[]; }
-  const alreadyPlayed = await checkAlreadyPlayedOnLoad();
-  if (!alreadyPlayed) document.getElementById('nameInput').focus();
-  checkForActiveQuestion();
-  setInterval(refreshQuestions, 15000);
+  // 1) اقرأ الكاش المحلي فوراً — الصفحة تعمل بدون انتظار
+  const cached = getCachedQuestions();
+  if (cached) {
+    allQuestions = cached;
+    const alreadyPlayed = await checkAlreadyPlayedOnLoad();
+    if (!alreadyPlayed) document.getElementById('nameInput').focus();
+    checkForActiveQuestion();
+    // 2) حدّث من Sheets في الخلفية بصمت
+    fetchAndCacheQuestions().then(fresh => {
+      if (fresh) allQuestions = fresh;
+    });
+  } else {
+    // أول مرة — لا كاش — حمّل من Sheets (مرة واحدة فقط)
+    const fresh = await fetchAndCacheQuestions();
+    allQuestions = fresh || [];
+    const alreadyPlayed = await checkAlreadyPlayedOnLoad();
+    if (!alreadyPlayed) document.getElementById('nameInput').focus();
+    checkForActiveQuestion();
+  }
+  // 3) تحديث دوري في الخلفية كل 30 ثانية
+  setInterval(async () => {
+    const fresh = await fetchAndCacheQuestions();
+    if (fresh) allQuestions = fresh;
+  }, 30000);
   setInterval(checkForActiveQuestion, 3000);
-}
-
-async function refreshQuestions() {
-  try { allQuestions = await apiGet('getQuestions'); } catch(e) {}
 }
 
 // ===== LOCK PROTECTION =====
