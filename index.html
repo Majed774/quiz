@@ -688,14 +688,13 @@ function processAnswer(chosen, isTimeUp) {
   const usedSec = (parseInt(q.answerSeconds) || 30) - timeLeft;
   const points = calcPoints(isCorrect, usedSec);
 
-  // أظهر صح/خطأ على الأزرار
+  // أوقف الأزرار بدون كشف الإجابة الصحيحة
   document.getElementById('submitWrap').style.display = 'none';
   ['A','B','C','D'].forEach(l => {
     const b = document.getElementById('btn'+l);
     b.disabled = true;
     b.classList.remove('selected');
-    if (l === correct) b.classList.add('correct');
-    else if (l === chosen && !isCorrect) b.classList.add('wrong');
+    // لا نكشف الإجابة الصحيحة حتى لا ينقلها المتسابق لغيره
   });
 
   sessionAnswers.push({ qId: q.id, qText: q.text, isCorrect, points, usedSec, chosen, correct });
@@ -714,23 +713,21 @@ function showQResult(isCorrect, correctOpt, isTimeUp, points, chosen) {
   const optLabel = {A:'أ',B:'ب',C:'ج',D:'د'};
   const isLast = currentQIndex >= todayQuestions.length - 1;
 
+  // الإجابة الصحيحة مخفية في جميع الحالات لمنع نقل الإجابات
+  document.getElementById('qrCorrectReveal').style.display = 'none';
+
   if (isCorrect) {
     document.getElementById('qrIcon').textContent = '🎉';
     document.getElementById('qrTitle').textContent = 'إجابة صحيحة!';
     document.getElementById('qrTitle').className = 'qr-title win';
-    document.getElementById('qrCorrectReveal').style.display = 'none';
   } else if (isTimeUp) {
     document.getElementById('qrIcon').textContent = '⏰';
     document.getElementById('qrTitle').textContent = 'انتهى الوقت!';
     document.getElementById('qrTitle').className = 'qr-title lose';
-    document.getElementById('qrCorrectReveal').style.display = 'block';
-    document.getElementById('qrCorrectReveal').textContent = `✅ الإجابة الصحيحة: (${optLabel[correctOpt]}) ${optMap[correctOpt]}`;
   } else {
     document.getElementById('qrIcon').textContent = '😔';
     document.getElementById('qrTitle').textContent = 'إجابة خاطئة!';
     document.getElementById('qrTitle').className = 'qr-title lose';
-    document.getElementById('qrCorrectReveal').style.display = 'block';
-    document.getElementById('qrCorrectReveal').textContent = `✅ الإجابة الصحيحة: (${optLabel[correctOpt]}) ${optMap[correctOpt]}`;
   }
 
   document.getElementById('qrPoints').textContent = isCorrect ? '+' + fmtPts(points) : '+0';
