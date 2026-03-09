@@ -283,10 +283,10 @@ function getDeviceId() {
 function getLocalPlayedLog() { try{return JSON.parse(localStorage.getItem('__playedLog')||'{}')}catch{return{}} }
 function setLocalPlayed(qId, data) {
   const log = getLocalPlayedLog();
-  log[getDeviceId()+'_'+qId] = data;
+  log[getDeviceId()+'_q_'+qId] = data;
   localStorage.setItem('__playedLog', JSON.stringify(log));
 }
-function getLocalPlayed(qId) { return getLocalPlayedLog()[getDeviceId()+'_'+qId]||null; }
+function getLocalPlayed(qId) { return getLocalPlayedLog()[getDeviceId()+'_q_'+qId]||null; }
 
 // ===== SMART CACHE =====
 // الأسئلة تُحمَّل من Sheets مرة واحدة وتُحفظ محلياً
@@ -298,7 +298,6 @@ function getCachedQuestions() {
   try {
     const c = JSON.parse(localStorage.getItem(Q_CACHE_KEY) || 'null');
     if (!c) return null;
-    // استخدم الكاش حتى لو قديم — سيُحدَّث في الخلفية
     return c.data || null;
   } catch { return null; }
 }
@@ -328,21 +327,49 @@ async function fetchAndCacheQuestions() {
   return null;
 }
 
+// ===== AUTO-EXPIRE LOCKS =====
+// يمسح قفل أي سؤال انتهت نافذته تلقائياً — بدون تدخل المشرف
+function clearExpiredLocks() {
+  try {
+    const log = getLocalPlayedLog();
+    const now = Date.now();
+    let changed = false;
+    for (const key of Object.keys(log)) {
+      const entry = log[key];
+      // استخرج questionId من المفتاح (الجزء بعد آخر _)
+      const parts = key.split('_q_');
+      if (parts.length < 2) continue;
+      const qId = parts[1];
+      // ابحث عن السؤال في الكاش
+      const cached = getCachedQuestions() || [];
+      const q = cached.find(q => String(q.id) === String(qId));
+      if (q) {
+        const winEnd = q.endDatetime
+          ? new Date(q.endDatetime).getTime()
+          : new Date(q.datetime).getTime() + (q.answerSeconds||30)*1000;
+        if (now > winEnd) {
+          delete log[key];
+          changed = true;
+        }
+      }
+    }
+    if (changed) localStorage.setItem('__playedLog', JSON.stringify(log));
+  } catch(e) {}
+}
+
 // ===== STATE =====
 let playerName='', currentQuestion=null, timerInterval=null;
 let timeLeft=30, answered=false, questionActive=false, locked=false;
 let allQuestions=[];
 
 async function showAlreadyPlayed(entry) {
-  // Double-check server lock before showing (in case admin cleared it)
   if (currentQuestion) {
     try {
-      const key = getDeviceId()+'_'+currentQuestion.id;
+      const key = getDeviceId()+'_q_'+currentQuestion.id;
       const res = await apiGet('checkLock&key='+encodeURIComponent(key));
       if (!res.locked) {
-        // Admin cleared the lock — remove local cache and continue
         const log = getLocalPlayedLog();
-        delete log[getDeviceId()+'_'+currentQuestion.id];
+        delete log[getDeviceId()+'_q_'+currentQuestion.id];
         localStorage.setItem('__playedLog', JSON.stringify(log));
         return;
       }
@@ -369,26 +396,21 @@ async function checkAlreadyPlayedOnLoad() {
       currentQuestion = q; // set so showAlreadyPlayed can recheck
       const local = getLocalPlayed(q.id);
       if (local) {
-        // Verify with server — admin might have cleared the lock
         try {
-          const key = getDeviceId()+'_'+q.id;
+          const key = getDeviceId()+'_q_'+q.id;
           const res = await apiGet('checkLock&key='+encodeURIComponent(key));
           if (!res.locked) {
-            // Lock was cleared on server — remove local cache
             const log = getLocalPlayedLog();
-            delete log[getDeviceId()+'_'+q.id];
+            delete log[getDeviceId()+'_q_'+q.id];
             localStorage.setItem('__playedLog', JSON.stringify(log));
             return false;
           }
-        } catch(e) {
-          // Network error — fall back to local cache
-        }
+        } catch(e) {}
         await showAlreadyPlayed(local);
         return true;
       }
-      // No local cache — check server directly
       try {
-        const key = getDeviceId()+'_'+q.id;
+        const key = getDeviceId()+'_q_'+q.id;
         const res = await apiGet('checkLock&key='+encodeURIComponent(key));
         if (res.locked) { await showAlreadyPlayed(res.data); return true; }
       } catch(e) {}
@@ -400,7 +422,8 @@ async function checkAlreadyPlayedOnLoad() {
 
 // ===== INIT =====
 async function init() {
-  // ابدأ تحميل الأسئلة فوراً في الخلفية — المتسابق يكتب اسمه في نفس الوقت
+  // امسح أقفال الأسئلة المنتهية تلقائياً عند كل فتح للصفحة
+  clearExpiredLocks();
   const cached = getCachedQuestions();
   if (cached) allQuestions = cached; // استخدم الكاش فوراً إن وُجد
 
@@ -547,7 +570,7 @@ async function saveResult(isCorrect,chosenOpt,usedSeconds,disqualified){
   // Save to server
   try {
     const devId=getDeviceId();
-    const key=devId+'_'+currentQuestion.id;
+    const key=devId+'_q_'+currentQuestion.id;
     await Promise.all([
       apiPost({action:'saveResult',result:{
         questionId:currentQuestion.id,questionText:currentQuestion.text,
