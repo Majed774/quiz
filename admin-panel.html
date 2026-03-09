@@ -590,7 +590,7 @@
         شارك هذا الرابط مع المتسابقين. ستظهر الأسئلة تلقائياً في الوقت المحدد.
       </p>
       <div class="link-box">
-        <code id="quizLink">quiz-player.html</code>
+        <code id="quizLink">https://majed774.github.io/quiz/</code>
         <button class="copy-btn" onclick="copyLink()">📋 نسخ</button>
       </div>
       <div style="background: rgba(231,76,60,0.08); border: 1px solid rgba(231,76,60,0.3); border-radius: 10px; padding: 16px; margin-top: 12px;">
@@ -890,7 +890,8 @@ function updateStats() {
 }
 
 function copyLink() {
-  navigator.clipboard.writeText('quiz-player.html').then(() => {
+  const link = 'https://majed774.github.io/quiz/';
+  navigator.clipboard.writeText(link).then(() => {
     const btn = document.querySelector('.copy-btn');
     btn.textContent = '✅ تم النسخ';
     setTimeout(() => btn.textContent = '📋 نسخ', 2000);
