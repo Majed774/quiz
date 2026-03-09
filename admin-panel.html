@@ -334,10 +334,48 @@
   </div>
 </div>
 
-<script>
-// ===== CONFIG =====
-const STORAGE_KEY = 'quizScriptUrl';
-let SCRIPT_URL = localStorage.getItem(STORAGE_KEY) || 'https://script.google.com/macros/s/AKfycbxEfxf8AcgQKvfc2ZMv6JoDZGK791QVHs6PhR_FRPcqbsmjWSjkH4ET51dCM3_Jx3IO6g/exec';
+<script type="module">
+// ===== FIREBASE =====
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, get, set, push, remove, onValue }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCJoRWTXh-AJi4G2l8Q6AhccpLUoMXd1YQ",
+  authDomain: "quiz-862e9.firebaseapp.com",
+  databaseURL: "https://quiz-862e9-default-rtdb.firebaseio.com",
+  projectId: "quiz-862e9",
+  storageBucket: "quiz-862e9.firebasestorage.app",
+  messagingSenderId: "900530378554",
+  appId: "1:900530378554:web:9ebbe9a160daaad78da203"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+// ===== FIREBASE HELPERS =====
+async function fbGetQuestions() {
+  const snap = await get(ref(db, 'questions'));
+  if (!snap.exists()) return [];
+  return Object.entries(snap.val()).map(([k,v]) => ({...v, _key: k}));
+}
+async function fbSaveQuestion(q) {
+  await set(ref(db, 'questions/' + q.id), q);
+}
+async function fbDeleteQuestion(id) {
+  await remove(ref(db, 'questions/' + id));
+}
+async function fbGetResults() {
+  const snap = await get(ref(db, 'results'));
+  if (!snap.exists()) return [];
+  return Object.values(snap.val());
+}
+async function fbClearResults() {
+  await remove(ref(db, 'results'));
+}
+async function fbClearLocks() {
+  await remove(ref(db, 'locks'));
+}
+
 let questions = [];
 let correctAnswer = null;
 let cachedResults = [];
@@ -348,59 +386,24 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('questionDate').value = now.toISOString().split('T')[0];
   document.getElementById('setupOverlay').classList.add('hidden');
   loadAll();
+  // استمع للتغييرات المباشرة
+  onValue(ref(db, 'questions'), snap => {
+    questions = snap.exists() ? Object.entries(snap.val()).map(([k,v])=>({...v,_key:k})) : [];
+    renderList(); updateStats();
+  });
 });
 
-// ===== SETUP =====
-function showSetup() { document.getElementById('setupOverlay').classList.remove('hidden'); }
-
-async function saveScriptUrl() {
-  const url = document.getElementById('scriptUrlInput').value.trim();
-  if (!url || !url.startsWith('https://script.google.com')) {
-    document.getElementById('scriptUrlInput').classList.add('error');
-    return;
-  }
-  showLoading('جاري اختبار الاتصال...');
-  try {
-    const res = await fetch(url + '?action=getQuestions');
-    await res.json();
-    SCRIPT_URL = url;
-    localStorage.setItem(STORAGE_KEY, url);
-    hideLoading();
-    document.getElementById('setupOverlay').classList.add('hidden');
-    const tr = document.getElementById('testResult');
-    tr.className='test-result ok'; tr.textContent='✅ تم الاتصال بنجاح!'; tr.style.display='block';
-    loadAll();
-  } catch(e) {
-    hideLoading();
-    const tr = document.getElementById('testResult');
-    tr.className='test-result err'; tr.textContent='❌ تعذر الاتصال. تأكد من الرابط والصلاحيات.'; tr.style.display='block';
-  }
-}
-
-// ===== API =====
+// ===== LOADING =====
 function showLoading(msg='جاري التحميل...') {
   document.getElementById('loadingMsg').textContent = msg;
   document.getElementById('loadingOverlay').classList.add('show');
 }
 function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
 
-async function apiGet(action) {
-  const res = await fetch(SCRIPT_URL + '?action=' + action);
-  return res.json();
-}
-async function apiPost(data) {
-  const res = await fetch(SCRIPT_URL, {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
-  return res.json();
-}
-
 async function loadAll() {
   showLoading('جاري تحميل البيانات...');
   try {
-    questions = await apiGet('getQuestions');
-    cachedResults = await apiGet('getResults');
+    [questions, cachedResults] = await Promise.all([fbGetQuestions(), fbGetResults()]);
   } catch(e) { questions = []; cachedResults = []; }
   hideLoading();
   updateStats();
@@ -466,8 +469,7 @@ async function saveQuestion() {
   document.getElementById('saveBtn').disabled=true;
   showLoading('جاري الحفظ...');
   try {
-    await apiPost({action:'saveQuestion',question:q});
-    questions.push(q);
+    await fbSaveQuestion(q);
     showAlert('✅ تم حفظ السؤال بنجاح!','success');
     resetForm(); updateStats();
   } catch(e) { showAlert('❌ حدث خطأ في الحفظ','error'); }
@@ -488,7 +490,7 @@ async function deleteQuestion(id){
   if(!confirm('هل تريد حذف هذا السؤال؟')) return;
   showLoading('جاري الحذف...');
   try {
-    await apiPost({action:'deleteQuestion',id});
+    await fbDeleteQuestion(id);
     questions=questions.filter(q=>String(q.id)!==String(id));
     renderList(); updateStats();
   } catch(e){}
@@ -532,7 +534,7 @@ function renderList(){
 // ===== RESULTS =====
 async function loadResults(){
   showLoading('جاري تحميل النتائج...');
-  try { cachedResults = await apiGet('getResults'); } catch(e){}
+  try { cachedResults = await fbGetResults(); } catch(e){}
   hideLoading();
   renderResults();
   updateStats();
@@ -582,15 +584,14 @@ function renderResults(){
 async function clearResults(){
   if(!confirm('هل تريد مسح جميع النتائج؟')) return;
   showLoading('جاري المسح...');
-  try{ await apiPost({action:'clearResults'}); cachedResults=[]; renderResults(); updateStats(); }catch(e){}
+  try{ await fbClearResults(); cachedResults=[]; renderResults(); updateStats(); }catch(e){}
   hideLoading();
 }
 async function clearDeviceLocks(){
   if(!confirm('هل تريد فتح قفل جميع الأجهزة؟')) return;
   showLoading('جاري الفتح...');
   try{
-    await apiPost({action:'clearLocks'});
-    // Clear local cache too
+    await fbClearLocks();
     localStorage.removeItem('__playedLog');
     updateStats();
   }catch(e){}
@@ -611,6 +612,18 @@ function updateStats(){
 }
 
 setInterval(()=>{ updateStats(); renderList(); }, 30000);
+
+// ===== EXPORTS (لأن type=module يعزل الدوال) =====
+window.switchTab = switchTab;
+window.selectCorrect = selectCorrect;
+window.setSeconds = setSeconds;
+window.previewWindow = previewWindow;
+window.saveQuestion = saveQuestion;
+window.deleteQuestion = deleteQuestion;
+window.loadResults = loadResults;
+window.renderResults = renderResults;
+window.clearResults = clearResults;
+window.clearDeviceLocks = clearDeviceLocks;
 </script>
 </body>
 </html>
