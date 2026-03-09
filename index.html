@@ -249,13 +249,29 @@
   <div class="name-card">
     <div class="trophy-wrap">🏆</div>
     <div class="name-title">مسابقة الإتحاد الرمضانية<br>العشر الأواخر</div>
-    <div class="name-subtitle">أهلاً بك! أدخل اسمك للمشاركة في أسئلة اليوم.<br>3 أسئلة يومياً • نقطتان لكل إجابة صحيحة + بونص السرعة</div>
-    <div class="name-input-wrap">
-      <label class="name-input-label">👤 اسمك الكامل</label>
-      <input type="text" class="name-input" id="nameInput" placeholder="اكتب اسمك هنا..." maxlength="40" autocomplete="off" onkeydown="if(event.key==='Enter')enterQuiz()">
-      <div class="name-error" id="nameError">⚠️ يرجى إدخال اسمك قبل المتابعة</div>
+
+    <!-- شاشة الترحيب (لو الاسم محفوظ) -->
+    <div id="welcomeBack" style="display:none;">
+      <div style="background:linear-gradient(135deg,#EDE9FE,#DDD6FE);border:2px solid rgba(124,58,237,.25);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;">
+        <div style="font-size:2rem;margin-bottom:8px;">👋</div>
+        <div style="font-size:.82rem;color:var(--text-muted);margin-bottom:6px;">أهلاً بعودتك</div>
+        <div id="savedNameDisplay" style="font-family:'Amiri',serif;font-size:1.6rem;color:var(--primary);font-weight:700;"></div>
+      </div>
+      <button class="enter-btn" onclick="enterWithSavedName()">دخول المسابقة ←</button>
+      <button onclick="showNewNameForm()" style="display:block;width:100%;margin-top:10px;background:none;border:none;color:var(--text-muted);font-family:'Tajawal',sans-serif;font-size:.82rem;cursor:pointer;text-decoration:underline;">ليس أنا؟ أدخل اسماً آخر</button>
     </div>
-    <button class="enter-btn" onclick="enterQuiz()">دخول المسابقة ←</button>
+
+    <!-- فورم إدخال الاسم (أول مرة أو تغيير) -->
+    <div id="newNameForm">
+      <div class="name-subtitle">أهلاً بك! أدخل اسمك للمشاركة في أسئلة اليوم.<br>3 أسئلة يومياً • نقطتان لكل إجابة صحيحة + بونص السرعة</div>
+      <div class="name-input-wrap">
+        <label class="name-input-label">👤 اسمك الكامل</label>
+        <input type="text" class="name-input" id="nameInput" placeholder="اكتب اسمك هنا..." maxlength="40" autocomplete="off" onkeydown="if(event.key==='Enter')enterQuiz()">
+        <div class="name-error" id="nameError">⚠️ يرجى إدخال اسمك قبل المتابعة</div>
+      </div>
+      <button class="enter-btn" onclick="enterQuiz()">دخول المسابقة ←</button>
+    </div>
+
     <div class="name-rules">
       <p><strong>⚠️ تنبيه:</strong> إذا غادرت الصفحة أثناء السؤال ستُحرم من بقية أسئلة اليوم. لا توجد مشاركة جزئية.</p>
     </div>
@@ -438,6 +454,16 @@ async function fbGetDayResult(deviceId) {
   const snap = await get(ref(db, `results/${today()}/${deviceId}`));
   return snap.exists() ? snap.val() : null;
 }
+// حفظ اسم الجهاز (مرة واحدة فقط)
+async function fbSavePlayerName(deviceId, name) {
+  await set(ref(db, `players/${deviceId}`), { name, registeredAt: new Date().toISOString() });
+}
+// استرجاع الاسم المحفوظ لهذا الجهاز
+async function fbGetPlayerName(deviceId) {
+  const snap = await get(ref(db, `players/${deviceId}`));
+  return snap.exists() ? snap.val().name : null;
+}
+
 async function fbGetLeaderboard() {
   const snap = await get(ref(db, 'results'));
   if (!snap.exists()) return [];
@@ -484,7 +510,6 @@ let dayTotalPoints = 0;
 window.addEventListener('DOMContentLoaded', async () => {
   // حمّل أسئلة اليوم في الخلفية
   fbGetTodayQuestions().then(qs => { todayQuestions = qs; });
-  document.getElementById('nameInput').focus();
   // استمع للتغييرات
   onValue(ref(db, 'questions'), snap => {
     if (!snap.exists()) return;
@@ -492,6 +517,20 @@ window.addEventListener('DOMContentLoaded', async () => {
     const t = today();
     todayQuestions = all.filter(q => q.day === t).sort((a,b)=>(a.order||1)-(b.order||1));
   });
+  // تحقق من الاسم المحفوظ لهذا الجهاز
+  const devId = getDeviceId();
+  const savedName = await fbGetPlayerName(devId);
+  if (savedName) {
+    // أظهر شاشة الترحيب بالاسم المحفوظ
+    playerName = savedName;
+    document.getElementById('savedNameDisplay').textContent = savedName;
+    document.getElementById('welcomeBack').style.display = 'block';
+    document.getElementById('newNameForm').style.display = 'none';
+  } else {
+    document.getElementById('welcomeBack').style.display = 'none';
+    document.getElementById('newNameForm').style.display = 'block';
+    document.getElementById('nameInput').focus();
+  }
 });
 
 // ===== ALREADY PLAYED =====
@@ -514,18 +553,36 @@ function enterQuiz() {
   const name = input.value.trim();
   if (!name) { input.classList.add('error'); document.getElementById('nameError').classList.add('show'); input.focus(); setTimeout(()=>input.classList.remove('error'),600); return; }
   playerName = name;
-  // انتقل للصفحة فوراً
+  // احفظ الاسم في Firebase مرتبطاً بالجهاز
+  fbSavePlayerName(getDeviceId(), playerName);
+  proceedToMain();
+}
+window.enterQuiz = enterQuiz;
+
+function enterWithSavedName() {
+  // الاسم محمّل مسبقاً في playerName
+  proceedToMain();
+}
+window.enterWithSavedName = enterWithSavedName;
+
+function showNewNameForm() {
+  document.getElementById('welcomeBack').style.display = 'none';
+  document.getElementById('newNameForm').style.display = 'block';
+  playerName = '';
+  setTimeout(()=>document.getElementById('nameInput').focus(), 100);
+}
+window.showNewNameForm = showNewNameForm;
+
+function proceedToMain() {
   document.getElementById('nameScreen').classList.add('hide');
   document.getElementById('mainPage').style.display = 'flex';
   document.getElementById('playerBadge').textContent = '👤 ' + playerName;
   document.getElementById('qPlayerName').textContent = '👤 ' + playerName;
   document.getElementById('waitMsg').textContent = `مرحباً ${playerName}! سيبدأ وقت الأسئلة في الموعد المحدد.`;
-  // تحقق في الخلفية
   checkAlreadyPlayed().then(played => {
     if (!played) startDayFlow();
   });
 }
-window.enterQuiz = enterQuiz;
 
 // ===== MAIN FLOW =====
 function startDayFlow() {
