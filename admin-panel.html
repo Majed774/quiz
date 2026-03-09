@@ -470,14 +470,50 @@
           <label>📅 تاريخ طرح السؤال *</label>
           <input type="date" id="questionDate">
         </div>
-        <div>
-          <label>⏰ وقت طرح السؤال *</label>
-          <input type="time" id="questionTime">
+        <div></div>
+      </div>
+
+      <!-- TIMING BOX 1: Answer timer -->
+      <div style="background:rgba(74,144,217,0.06);border:1px solid rgba(74,144,217,0.25);border-radius:12px;padding:20px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          <span style="font-size:1.3rem;">⏱️</span>
+          <div>
+            <div style="font-size:0.9rem;color:var(--accent);font-weight:700;">وقت الإجابة الشخصي</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">عدد الثواني المتاحة للشخص للإجابة بعد فتح السؤال — إذا تجاوزها تُحتسب إجابته خطأ</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:14px;">
+          <input type="number" id="answerSeconds" value="30" min="5" max="300" style="width:100px;text-align:center;font-size:1.2rem;font-weight:700;margin:0;" oninput="previewWindow()">
+          <span style="color:var(--text-muted);font-size:0.9rem;">ثانية</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button type="button" onclick="setSeconds(15)" style="background:rgba(74,144,217,0.12);border:1px solid rgba(74,144,217,0.3);color:var(--accent);padding:5px 12px;border-radius:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:0.8rem;font-weight:600;">15ث</button>
+            <button type="button" onclick="setSeconds(30)" style="background:rgba(74,144,217,0.12);border:1px solid rgba(74,144,217,0.3);color:var(--accent);padding:5px 12px;border-radius:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:0.8rem;font-weight:600;">30ث</button>
+            <button type="button" onclick="setSeconds(60)" style="background:rgba(74,144,217,0.12);border:1px solid rgba(74,144,217,0.3);color:var(--accent);padding:5px 12px;border-radius:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:0.8rem;font-weight:600;">60ث</button>
+          </div>
         </div>
       </div>
 
-      <label>⏱️ مدة السؤال (ثانية)</label>
-      <input type="number" id="duration" value="30" min="10" max="120">
+      <!-- TIMING BOX 2: Visibility window -->
+      <div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:20px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          <span style="font-size:1.3rem;">📅</span>
+          <div>
+            <div style="font-size:0.9rem;color:var(--gold);font-weight:700;">نافذة ظهور السؤال للجمهور</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">خارج هذا النطاق الزمني لن يرى المتسابق السؤال إطلاقاً</div>
+          </div>
+        </div>
+        <div class="time-row" style="margin-top:14px;">
+          <div>
+            <label>🟢 من الساعة *</label>
+            <input type="time" id="timeStart" oninput="previewWindow()">
+          </div>
+          <div>
+            <label>🔴 إلى الساعة *</label>
+            <input type="time" id="timeEnd" oninput="previewWindow()">
+          </div>
+        </div>
+        <div id="windowPreview" style="display:none;border-radius:8px;padding:10px 14px;font-size:0.85rem;text-align:center;margin-top:4px;"></div>
+      </div>
 
       <button class="btn btn-primary" onclick="saveQuestion()">💾 حفظ السؤال</button>
     </div>
@@ -605,29 +641,69 @@ function saveQuestion() {
   const optC = document.getElementById('optC').value.trim();
   const optD = document.getElementById('optD').value.trim();
   const date = document.getElementById('questionDate').value;
-  const time = document.getElementById('questionTime').value;
-  const duration = parseInt(document.getElementById('duration').value);
+  const answerSec = parseInt(document.getElementById('answerSeconds').value);
+  const timeStart = document.getElementById('timeStart').value;
+  const timeEnd = document.getElementById('timeEnd').value;
 
   if (!text) return showAlert('❌ يرجى كتابة نص السؤال', 'error');
   if (!optA || !optB || !optC || !optD) return showAlert('❌ يرجى ملء جميع الخيارات الأربعة', 'error');
   if (!correctAnswer) return showAlert('❌ يرجى تحديد الإجابة الصحيحة', 'error');
-  if (!date || !time) return showAlert('❌ يرجى تحديد التاريخ والوقت', 'error');
+  if (!date) return showAlert('❌ يرجى تحديد التاريخ', 'error');
+  if (!answerSec || answerSec < 5) return showAlert('❌ وقت الإجابة لا يمكن أن يكون أقل من 5 ثواني', 'error');
+  if (!timeStart || !timeEnd) return showAlert('❌ يرجى تحديد نافذة ظهور السؤال (من/إلى)', 'error');
+
+  const startDt = new Date(`${date}T${timeStart}`);
+  const endDt   = new Date(`${date}T${timeEnd}`);
+  if (endDt <= startDt) return showAlert('❌ وقت نهاية النافذة يجب أن يكون بعد وقت البداية', 'error');
+  if (answerSec > Math.floor((endDt - startDt)/1000))
+    return showAlert('❌ وقت الإجابة أطول من نافذة الظهور الكلية!', 'error');
 
   const q = {
     id: Date.now(),
     text, optA, optB, optC, optD,
     correct: correctAnswer,
-    datetime: `${date}T${time}`,
-    duration: duration || 30,
+    // نافذة الظهور للجمهور
+    datetime: startDt.toISOString(),
+    endDatetime: endDt.toISOString(),
+    timeStart, timeEnd,
+    // وقت الإجابة الشخصي
+    answerSeconds: answerSec,
     createdAt: new Date().toISOString()
   };
 
   questions.push(q);
   localStorage.setItem('quizQuestions', JSON.stringify(questions));
-
   showAlert('✅ تم حفظ السؤال بنجاح!', 'success');
   resetForm();
   updateStats();
+}
+
+function setSeconds(n) { document.getElementById('answerSeconds').value = n; previewWindow(); }
+
+function previewWindow() {
+  const ts = document.getElementById('timeStart').value;
+  const te = document.getElementById('timeEnd').value;
+  const ans = parseInt(document.getElementById('answerSeconds').value) || 0;
+  const prev = document.getElementById('windowPreview');
+  if (!ts || !te) { prev.style.display='none'; return; }
+  const base = new Date();
+  const s = new Date(`${base.toDateString()} ${ts}`);
+  const e = new Date(`${base.toDateString()} ${te}`);
+  if (e <= s) {
+    prev.style.display='block';
+    prev.style.cssText += ';background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.3);color:var(--red)';
+    prev.textContent='⚠️ وقت النهاية يجب أن يكون بعد وقت البداية'; return;
+  }
+  const totalSec = Math.floor((e-s)/1000);
+  const th=Math.floor(totalSec/3600), tm=Math.floor((totalSec%3600)/60), ts2=totalSec%60;
+  let totalLabel='';
+  if(th) totalLabel+=`${th} ساعة `;
+  if(tm) totalLabel+=`${tm} دقيقة `;
+  if(ts2) totalLabel+=`${ts2} ثانية`;
+  const warn = ans > totalSec ? ' ⚠️ وقت الإجابة أطول من النافذة!' : '';
+  prev.style.display='block';
+  prev.style.cssText += ';background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);color:var(--green)';
+  prev.innerHTML=`✅ نافذة الظهور: <strong>${ts}</strong> ← <strong>${te}</strong> (${totalLabel.trim()})${warn}<br><span style="color:var(--accent);font-size:0.8rem;">⏱️ وقت الإجابة الشخصي: ${ans} ثانية</span>`;
 }
 
 function resetForm() {
@@ -636,6 +712,10 @@ function resetForm() {
   document.getElementById('optB').value = '';
   document.getElementById('optC').value = '';
   document.getElementById('optD').value = '';
+  document.getElementById('timeStart').value = '';
+  document.getElementById('timeEnd').value = '';
+  document.getElementById('answerSeconds').value = '30';
+  document.getElementById('windowPreview').style.display = 'none';
   correctAnswer = null;
   document.querySelectorAll('.correct-btn').forEach(b => b.classList.remove('selected'));
   document.querySelectorAll('.option-item').forEach(el => el.classList.remove('correct'));
@@ -650,11 +730,11 @@ function deleteQuestion(id) {
 }
 
 function getStatus(q) {
-  const qTime = new Date(q.datetime).getTime();
   const now = Date.now();
-  const end = qTime + q.duration * 1000;
-  if (now < qTime) return 'scheduled';
-  if (now >= qTime && now < end) return 'active';
+  const start = new Date(q.datetime).getTime();
+  const end = q.endDatetime ? new Date(q.endDatetime).getTime() : start + q.duration * 1000;
+  if (now < start) return 'scheduled';
+  if (now >= start && now < end) return 'active';
   return 'past';
 }
 
@@ -667,15 +747,24 @@ function renderList() {
   const sorted = [...questions].sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
   el.innerHTML = sorted.map((q, i) => {
     const st = getStatus(q);
-    const dt = new Date(q.datetime);
+    const dtStart = new Date(q.datetime);
+    const dtEnd = q.endDatetime ? new Date(q.endDatetime) : new Date(dtStart.getTime() + q.duration*1000);
+    const fmtTime = dt => dt.toLocaleTimeString('ar-SA', {hour:'2-digit',minute:'2-digit'});
     const statusLabel = { scheduled: '⏳ مجدول', active: '🟢 نشط الآن', past: '✅ انتهى' }[st];
     const statusClass = { scheduled: 'scheduled', active: 'active-now', past: 'past' }[st];
+    const diff = Math.floor((dtEnd - dtStart)/1000);
+    const durLabel = diff >= 3600 ? `${Math.floor(diff/3600)}س ${Math.floor((diff%3600)/60)}د` : diff >= 60 ? `${Math.floor(diff/60)} دقيقة` : `${diff} ثانية`;
+    const ansSec = q.answerSeconds || q.duration || 30;
     return `
       <div class="q-item ${st === 'active' ? 'active' : ''}">
         <div class="q-num">${i+1}</div>
         <div class="q-info">
           <div class="q-text">${q.text.length > 60 ? q.text.slice(0,60)+'...' : q.text}</div>
-          <div class="q-meta">📅 ${dt.toLocaleDateString('ar-SA')} ⏰ ${dt.toLocaleTimeString('ar-SA', {hour:'2-digit',minute:'2-digit'})} · ⏱️ ${q.duration} ثانية</div>
+          <div class="q-meta">
+            📅 ${dtStart.toLocaleDateString('ar-SA')}
+            &nbsp;|&nbsp; 🟢 ${fmtTime(dtStart)} ← 🔴 ${fmtTime(dtEnd)} (${durLabel})
+            &nbsp;|&nbsp; ⏱️ إجابة: ${ansSec}ث
+          </div>
         </div>
         <span class="q-status ${statusClass}">${statusLabel}</span>
         <button class="btn btn-danger" style="padding: 8px 14px; font-size: 0.8rem;" onclick="deleteQuestion(${q.id})">🗑️</button>
