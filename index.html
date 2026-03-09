@@ -234,10 +234,45 @@
   </div>
 </div>
 
-<script>
-// ===== CONFIG =====
-// ضع رابط Apps Script هنا مباشرة
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxEfxf8AcgQKvfc2ZMv6JoDZGK791QVHs6PhR_FRPcqbsmjWSjkH4ET51dCM3_Jx3IO6g/exec';
+<script type="module">
+// ===== FIREBASE CONFIG =====
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, get, set, push, remove, onValue, child }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCJoRWTXh-AJi4G2l8Q6AhccpLUoMXd1YQ",
+  authDomain: "quiz-862e9.firebaseapp.com",
+  databaseURL: "https://quiz-862e9-default-rtdb.firebaseio.com",
+  projectId: "quiz-862e9",
+  storageBucket: "quiz-862e9.firebasestorage.app",
+  messagingSenderId: "900530378554",
+  appId: "1:900530378554:web:9ebbe9a160daaad78da203"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+// ===== FIREBASE HELPERS =====
+async function fbGetQuestions() {
+  const snap = await get(ref(db, 'questions'));
+  if (!snap.exists()) return [];
+  return Object.values(snap.val());
+}
+
+async function fbCheckLock(key) {
+  const snap = await get(ref(db, 'locks/' + key.replace(/[.#$/\[\]]/g, '_')));
+  if (!snap.exists()) return { locked: false };
+  return { locked: true, data: snap.val() };
+}
+
+async function fbSetLock(key, value) {
+  await set(ref(db, 'locks/' + key.replace(/[.#$/\[\]]/g, '_')), value);
+}
+
+async function fbSaveResult(result) {
+  await push(ref(db, 'results'), result);
+}
 
 // ===== STARS =====
 (function(){
@@ -249,23 +284,6 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxEfxf8AcgQKvfc2ZMv6
     c.appendChild(s);
   }
 })();
-
-// ===== INIT =====
-window.addEventListener('DOMContentLoaded', () => {
-  init();
-});
-
-async function savePlayerScriptUrl() {} // غير مستخدمة
-
-// ===== API =====
-async function apiGet(action) {
-  const res = await fetch(SCRIPT_URL + '?action=' + action + '&t=' + Date.now());
-  return res.json();
-}
-async function apiPost(data) {
-  const res = await fetch(SCRIPT_URL, { method:'POST', body:JSON.stringify(data) });
-  return res.json();
-}
 
 // ===== DEVICE FINGERPRINT =====
 function getDeviceId() {
@@ -279,7 +297,7 @@ function getDeviceId() {
   return id;
 }
 
-// ===== LOCAL LOCK CACHE (avoids repeated API calls) =====
+// ===== LOCAL LOCK CACHE =====
 function getLocalPlayedLog() { try{return JSON.parse(localStorage.getItem('__playedLog')||'{}')}catch{return{}} }
 function setLocalPlayed(qId, data) {
   const log = getLocalPlayedLog();
@@ -288,73 +306,35 @@ function setLocalPlayed(qId, data) {
 }
 function getLocalPlayed(qId) { return getLocalPlayedLog()[getDeviceId()+'_q_'+qId]||null; }
 
-// ===== SMART CACHE =====
-// الأسئلة تُحمَّل من Sheets مرة واحدة وتُحفظ محلياً
-// الفتحات التالية تقرأ من الكاش فوراً — Sheets يُحدَّث في الخلفية
+// ===== LOCAL QUESTIONS CACHE =====
 const Q_CACHE_KEY = '__qCache';
-const Q_CACHE_TTL = 60 * 60 * 1000; // ساعة كحد أقصى للكاش
-
 function getCachedQuestions() {
-  try {
-    const c = JSON.parse(localStorage.getItem(Q_CACHE_KEY) || 'null');
-    if (!c) return null;
-    return c.data || null;
-  } catch { return null; }
+  try { const c=JSON.parse(localStorage.getItem(Q_CACHE_KEY)||'null'); return c?.data||null; } catch{return null;}
 }
-
 function setCachedQuestions(data) {
-  try {
-    localStorage.setItem(Q_CACHE_KEY, JSON.stringify({ data, ts: Date.now() }));
-  } catch(e) {}
+  try { localStorage.setItem(Q_CACHE_KEY, JSON.stringify({data, ts:Date.now()})); } catch(e){}
 }
-
-function isCacheStale() {
-  try {
-    const c = JSON.parse(localStorage.getItem(Q_CACHE_KEY) || 'null');
-    if (!c) return true;
-    return (Date.now() - c.ts) > Q_CACHE_TTL;
-  } catch { return true; }
-}
-
 async function fetchAndCacheQuestions() {
-  try {
-    const fresh = await apiGet('getQuestions');
-    if (Array.isArray(fresh)) {
-      setCachedQuestions(fresh);
-      return fresh;
-    }
-  } catch(e) {}
+  try { const fresh=await fbGetQuestions(); if(Array.isArray(fresh)){setCachedQuestions(fresh);return fresh;} } catch(e){}
   return null;
 }
 
 // ===== AUTO-EXPIRE LOCKS =====
-// يمسح قفل أي سؤال انتهت نافذته تلقائياً — بدون تدخل المشرف
 function clearExpiredLocks() {
   try {
-    const log = getLocalPlayedLog();
-    const now = Date.now();
-    let changed = false;
+    const log=getLocalPlayedLog(); const now=Date.now(); let changed=false;
     for (const key of Object.keys(log)) {
-      const entry = log[key];
-      // استخرج questionId من المفتاح (الجزء بعد آخر _)
-      const parts = key.split('_q_');
-      if (parts.length < 2) continue;
-      const qId = parts[1];
-      // ابحث عن السؤال في الكاش
-      const cached = getCachedQuestions() || [];
-      const q = cached.find(q => String(q.id) === String(qId));
-      if (q) {
-        const winEnd = q.endDatetime
-          ? new Date(q.endDatetime).getTime()
-          : new Date(q.datetime).getTime() + (q.answerSeconds||30)*1000;
-        if (now > winEnd) {
-          delete log[key];
-          changed = true;
-        }
+      const parts=key.split('_q_'); if(parts.length<2) continue;
+      const qId=parts[1];
+      const cached=getCachedQuestions()||[];
+      const q=cached.find(q=>String(q.id)===String(qId));
+      if(q){
+        const winEnd=q.endDatetime?new Date(q.endDatetime).getTime():new Date(q.datetime).getTime()+(q.answerSeconds||30)*1000;
+        if(now>winEnd){delete log[key];changed=true;}
       }
     }
-    if (changed) localStorage.setItem('__playedLog', JSON.stringify(log));
-  } catch(e) {}
+    if(changed) localStorage.setItem('__playedLog', JSON.stringify(log));
+  } catch(e){}
 }
 
 // ===== STATE =====
@@ -362,13 +342,15 @@ let playerName='', currentQuestion=null, timerInterval=null;
 let timeLeft=30, answered=false, questionActive=false, locked=false;
 let allQuestions=[];
 
+// ===== ALREADY PLAYED =====
 async function showAlreadyPlayed(entry) {
+  // تحقق من Firebase إذا فتح المشرف القفل
   if (currentQuestion) {
     try {
       const key = getDeviceId()+'_q_'+currentQuestion.id;
-      const res = await apiGet('checkLock&key='+encodeURIComponent(key));
+      const res = await fbCheckLock(key);
       if (!res.locked) {
-        const log = getLocalPlayedLog();
+        const log=getLocalPlayedLog();
         delete log[getDeviceId()+'_q_'+currentQuestion.id];
         localStorage.setItem('__playedLog', JSON.stringify(log));
         return;
@@ -388,52 +370,42 @@ async function showAlreadyPlayed(entry) {
 }
 
 async function checkAlreadyPlayedOnLoad() {
-  const now = Date.now();
+  const now=Date.now();
   for (const q of allQuestions) {
     const winStart=new Date(q.datetime).getTime();
     const winEnd=q.endDatetime?new Date(q.endDatetime).getTime():winStart+(q.answerSeconds||30)*1000;
-    if (now>=winStart && now<winEnd) {
-      currentQuestion = q;
-      const local = getLocalPlayed(q.id);
-      if (local) {
-        // الكاش المحلي موجود — ثق به فوراً بدون طلب سيرفر
-        // (التحقق من السيرفر يحدث فقط في showAlreadyPlayed)
-        await showAlreadyPlayed(local);
-        return true;
-      }
-      // لا كاش محلي — تحقق من السيرفر (حالة نادرة)
+    if(now>=winStart&&now<winEnd){
+      currentQuestion=q;
+      const local=getLocalPlayed(q.id);
+      if(local){ await showAlreadyPlayed(local); return true; }
       try {
-        const key = getDeviceId()+'_q_'+q.id;
-        const res = await apiGet('checkLock&key='+encodeURIComponent(key));
-        if (res.locked) { await showAlreadyPlayed(res.data); return true; }
-      } catch(e) {}
+        const key=getDeviceId()+'_q_'+q.id;
+        const res=await fbCheckLock(key);
+        if(res.locked){ await showAlreadyPlayed(res.data); return true; }
+      } catch(e){}
     }
   }
-  currentQuestion = null;
-  return false;
+  currentQuestion=null; return false;
 }
 
 // ===== INIT =====
-async function init() {
-  // امسح أقفال الأسئلة المنتهية تلقائياً عند كل فتح للصفحة
+window.addEventListener('DOMContentLoaded', async () => {
   clearExpiredLocks();
+  // استخدم الكاش فوراً
   const cached = getCachedQuestions();
-  if (cached) allQuestions = cached; // استخدم الكاش فوراً إن وُجد
-
-  // حمّل من Sheets في الخلفية بدون انتظار
-  fetchAndCacheQuestions().then(fresh => {
-    if (fresh) allQuestions = fresh;
-  });
-
+  if (cached) allQuestions = cached;
+  // حمّل من Firebase في الخلفية أثناء كتابة الاسم
+  fetchAndCacheQuestions().then(fresh => { if(fresh) allQuestions=fresh; });
   document.getElementById('nameInput').focus();
-
-  // تحديث دوري كل 30 ثانية
-  setInterval(async () => {
-    const fresh = await fetchAndCacheQuestions();
-    if (fresh) allQuestions = fresh;
-  }, 30000);
+  // استمع للتغييرات المباشرة من Firebase (real-time)
+  onValue(ref(db, 'questions'), snap => {
+    if(snap.exists()){
+      allQuestions=Object.values(snap.val());
+      setCachedQuestions(allQuestions);
+    }
+  });
   setInterval(checkForActiveQuestion, 1000);
-}
+});
 
 // ===== LOCK PROTECTION =====
 let wasHidden=false;
@@ -458,19 +430,14 @@ function enterQuiz(){
   const name=input.value.trim();
   if(!name){input.classList.add('error');document.getElementById('nameError').classList.add('show');input.focus();setTimeout(()=>input.classList.remove('error'),600);return;}
   playerName=name;
-
-  // انتقل للصفحة فوراً بدون انتظار
   document.getElementById('nameScreen').classList.add('hide');
   document.getElementById('mainPage').style.display='flex';
   document.getElementById('playerBadge').textContent='👤 '+playerName;
   document.getElementById('qPlayerName').textContent='👤 '+playerName;
   document.getElementById('waitMsg').textContent=`مرحباً ${playerName}! سيظهر سؤال المسابقة في الوقت المحدد. كن مستعداً!`;
-
-  // تحقق من "شاركت مسبقاً" في الخلفية
-  checkAlreadyPlayedOnLoad().then(alreadyPlayed => {
-    if (!alreadyPlayed) checkForActiveQuestion();
-  });
+  checkAlreadyPlayedOnLoad().then(played => { if(!played) checkForActiveQuestion(); });
 }
+window.enterQuiz = enterQuiz;
 
 // ===== MAIN LOOP =====
 function checkForActiveQuestion(){
@@ -524,6 +491,7 @@ function startQuestion(q){
   ['A','B','C','D'].forEach(l=>{const b=document.getElementById('btn'+l);b.disabled=false;b.className='opt-btn';});
   startTimer(personalTimer,personalTimer);
 }
+window.startQuestion = startQuestion;
 
 function startTimer(total,remaining){
   clearInterval(timerInterval);updateTimerUI(remaining,total);
@@ -548,33 +516,28 @@ function answer(opt){
   const usedSec=personalTimer-timeLeft;
   ['A','B','C','D'].forEach(l=>{const b=document.getElementById('btn'+l);b.disabled=true;if(l===correct)b.classList.add('correct');else if(l===opt&&!isCorrect)b.classList.add('wrong');});
   saveResult(isCorrect,opt,usedSec,false);
-  // تأخير بسيط لإظهار الإجابة الصحيحة/الخاطئة قبل الانتقال
-  setTimeout(()=>showResult(isCorrect,correct,false,usedSec), 600);
+  setTimeout(()=>showResult(isCorrect,correct,false,usedSec),600);
 }
+window.answer = answer;
 
 function timeUp(){
   if(answered)return;answered=true;questionActive=false;
   const personalTimer=parseInt(currentQuestion.answerSeconds)||30;
   ['A','B','C','D'].forEach(l=>{const b=document.getElementById('btn'+l);b.disabled=true;if(l===currentQuestion.correct)b.classList.add('correct');});
   saveResult(false,null,personalTimer,false);
-  setTimeout(()=>showResult(false,currentQuestion.correct,true,personalTimer), 400);
+  setTimeout(()=>showResult(false,currentQuestion.correct,true,personalTimer),400);
 }
 
 async function saveResult(isCorrect,chosenOpt,usedSeconds,disqualified){
   const entry={playerName,isCorrect,chosenOpt,usedSec:usedSeconds,disqualified,timestamp:new Date().toISOString()};
-  // Save to local cache immediately
   setLocalPlayed(currentQuestion.id, entry);
-  // Save to server
   try {
     const devId=getDeviceId();
     const key=devId+'_q_'+currentQuestion.id;
     await Promise.all([
-      apiPost({action:'saveResult',result:{
-        questionId:currentQuestion.id,questionText:currentQuestion.text,
-        playerName,isCorrect,chosenOpt,usedSeconds,disqualified,
-        deviceId:devId,timestamp:entry.timestamp
-      }}),
-      apiPost({action:'setLock',key,value:entry})
+      fbSaveResult({questionId:currentQuestion.id,questionText:currentQuestion.text,
+        playerName,isCorrect,chosenOpt,usedSeconds,disqualified,deviceId:devId,timestamp:entry.timestamp}),
+      fbSetLock(key, entry)
     ]);
   } catch(e){}
 }
