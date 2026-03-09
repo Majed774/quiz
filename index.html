@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مسابقة الإتحاد الثقافية - العشر الأواخر</title>
+<title>المسابقة الثقافية اليومية</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{--gold:#C9A84C;--gold-light:#F0C060;--dark:#070710;--dark2:#0E0E1C;--dark3:#151528;--accent:#4A90D9;--green:#2ECC71;--red:#E74C3C;--text:#F0E8D8;--text-muted:#706878;}
@@ -157,7 +157,7 @@
 <div id="nameScreen">
   <div class="name-card">
     <div class="trophy-wrap">🏆</div>
-    <div class="name-title">مسابقة الإتحاد الثقافية - العشر الأواخر</div>
+    <div class="name-title">المسابقة الثقافية</div>
     <div class="name-subtitle">أهلاً بك! أدخل اسمك للمشاركة في سؤال اليوم.<br>سيُعرض اسمك في قائمة الفائزين لدى المشرف.</div>
     <div class="name-input-wrap">
       <label class="name-input-label">👤 اسمك الكامل</label>
@@ -293,7 +293,21 @@ let playerName='', currentQuestion=null, timerInterval=null;
 let timeLeft=30, answered=false, questionActive=false, locked=false;
 let allQuestions=[];
 
-function showAlreadyPlayed(entry) {
+async function showAlreadyPlayed(entry) {
+  // Double-check server lock before showing (in case admin cleared it)
+  if (currentQuestion) {
+    try {
+      const key = getDeviceId()+'_'+currentQuestion.id;
+      const res = await apiGet('checkLock&key='+encodeURIComponent(key));
+      if (!res.locked) {
+        // Admin cleared the lock — remove local cache and continue
+        const log = getLocalPlayedLog();
+        delete log[getDeviceId()+'_'+currentQuestion.id];
+        localStorage.setItem('__playedLog', JSON.stringify(log));
+        return;
+      }
+    } catch(e) {}
+  }
   document.getElementById('nameScreen').style.display='none';
   document.getElementById('mainPage').style.display='none';
   document.getElementById('alreadyPlayedScreen').classList.add('show');
@@ -312,17 +326,35 @@ async function checkAlreadyPlayedOnLoad() {
     const winStart=new Date(q.datetime).getTime();
     const winEnd=q.endDatetime?new Date(q.endDatetime).getTime():winStart+(q.answerSeconds||30)*1000;
     if (now>=winStart && now<winEnd) {
-      // Check local cache first
+      currentQuestion = q; // set so showAlreadyPlayed can recheck
       const local = getLocalPlayed(q.id);
-      if (local) { showAlreadyPlayed(local); return true; }
-      // Then check server
+      if (local) {
+        // Verify with server — admin might have cleared the lock
+        try {
+          const key = getDeviceId()+'_'+q.id;
+          const res = await apiGet('checkLock&key='+encodeURIComponent(key));
+          if (!res.locked) {
+            // Lock was cleared on server — remove local cache
+            const log = getLocalPlayedLog();
+            delete log[getDeviceId()+'_'+q.id];
+            localStorage.setItem('__playedLog', JSON.stringify(log));
+            return false;
+          }
+        } catch(e) {
+          // Network error — fall back to local cache
+        }
+        await showAlreadyPlayed(local);
+        return true;
+      }
+      // No local cache — check server directly
       try {
         const key = getDeviceId()+'_'+q.id;
         const res = await apiGet('checkLock&key='+encodeURIComponent(key));
-        if (res.locked) { showAlreadyPlayed(res.data); return true; }
+        if (res.locked) { await showAlreadyPlayed(res.data); return true; }
       } catch(e) {}
     }
   }
+  currentQuestion = null;
   return false;
 }
 
