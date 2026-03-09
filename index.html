@@ -393,22 +393,15 @@ async function checkAlreadyPlayedOnLoad() {
     const winStart=new Date(q.datetime).getTime();
     const winEnd=q.endDatetime?new Date(q.endDatetime).getTime():winStart+(q.answerSeconds||30)*1000;
     if (now>=winStart && now<winEnd) {
-      currentQuestion = q; // set so showAlreadyPlayed can recheck
+      currentQuestion = q;
       const local = getLocalPlayed(q.id);
       if (local) {
-        try {
-          const key = getDeviceId()+'_q_'+q.id;
-          const res = await apiGet('checkLock&key='+encodeURIComponent(key));
-          if (!res.locked) {
-            const log = getLocalPlayedLog();
-            delete log[getDeviceId()+'_q_'+q.id];
-            localStorage.setItem('__playedLog', JSON.stringify(log));
-            return false;
-          }
-        } catch(e) {}
+        // الكاش المحلي موجود — ثق به فوراً بدون طلب سيرفر
+        // (التحقق من السيرفر يحدث فقط في showAlreadyPlayed)
         await showAlreadyPlayed(local);
         return true;
       }
+      // لا كاش محلي — تحقق من السيرفر (حالة نادرة)
       try {
         const key = getDeviceId()+'_q_'+q.id;
         const res = await apiGet('checkLock&key='+encodeURIComponent(key));
@@ -439,7 +432,7 @@ async function init() {
     const fresh = await fetchAndCacheQuestions();
     if (fresh) allQuestions = fresh;
   }, 30000);
-  setInterval(checkForActiveQuestion, 3000);
+  setInterval(checkForActiveQuestion, 1000);
 }
 
 // ===== LOCK PROTECTION =====
@@ -460,20 +453,23 @@ function triggerLock(){
 }
 
 // ===== NAME ENTRY =====
-async function enterQuiz(){
+function enterQuiz(){
   const input=document.getElementById('nameInput');
   const name=input.value.trim();
   if(!name){input.classList.add('error');document.getElementById('nameError').classList.add('show');input.focus();setTimeout(()=>input.classList.remove('error'),600);return;}
   playerName=name;
-  // تحقق من "شاركت مسبقاً" بعد إدخال الاسم
-  const alreadyPlayed = await checkAlreadyPlayedOnLoad();
-  if (alreadyPlayed) return;
+
+  // انتقل للصفحة فوراً بدون انتظار
   document.getElementById('nameScreen').classList.add('hide');
   document.getElementById('mainPage').style.display='flex';
   document.getElementById('playerBadge').textContent='👤 '+playerName;
   document.getElementById('qPlayerName').textContent='👤 '+playerName;
   document.getElementById('waitMsg').textContent=`مرحباً ${playerName}! سيظهر سؤال المسابقة في الوقت المحدد. كن مستعداً!`;
-  checkForActiveQuestion();
+
+  // تحقق من "شاركت مسبقاً" في الخلفية
+  checkAlreadyPlayedOnLoad().then(alreadyPlayed => {
+    if (!alreadyPlayed) checkForActiveQuestion();
+  });
 }
 
 // ===== MAIN LOOP =====
@@ -552,7 +548,8 @@ function answer(opt){
   const usedSec=personalTimer-timeLeft;
   ['A','B','C','D'].forEach(l=>{const b=document.getElementById('btn'+l);b.disabled=true;if(l===correct)b.classList.add('correct');else if(l===opt&&!isCorrect)b.classList.add('wrong');});
   saveResult(isCorrect,opt,usedSec,false);
-  setTimeout(()=>showResult(isCorrect,correct,false,usedSec),1500);
+  // تأخير بسيط لإظهار الإجابة الصحيحة/الخاطئة قبل الانتقال
+  setTimeout(()=>showResult(isCorrect,correct,false,usedSec), 600);
 }
 
 function timeUp(){
@@ -560,7 +557,7 @@ function timeUp(){
   const personalTimer=parseInt(currentQuestion.answerSeconds)||30;
   ['A','B','C','D'].forEach(l=>{const b=document.getElementById('btn'+l);b.disabled=true;if(l===currentQuestion.correct)b.classList.add('correct');});
   saveResult(false,null,personalTimer,false);
-  setTimeout(()=>showResult(false,currentQuestion.correct,true,personalTimer),1200);
+  setTimeout(()=>showResult(false,currentQuestion.correct,true,personalTimer), 400);
 }
 
 async function saveResult(isCorrect,chosenOpt,usedSeconds,disqualified){
