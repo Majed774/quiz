@@ -250,7 +250,7 @@
 
   .stats-row {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
     margin-bottom: 24px;
   }
@@ -412,6 +412,10 @@
       <div class="stat-label">السؤال النشط الآن</div>
     </div>
     <div class="stat-card">
+      <div class="stat-num" id="participantsCount">0</div>
+      <div class="stat-label">أجهزة شاركت اليوم</div>
+    </div>
+    <div class="stat-card">
       <div class="stat-num" id="nextQ">-</div>
       <div class="stat-label">السؤال القادم</div>
     </div>
@@ -541,7 +545,10 @@
       <div class="card-title">
         <div class="icon">🏅</div>
         نتائج المتسابقين
-        <button class="btn btn-danger" style="padding:8px 16px;font-size:0.8rem;margin-right:auto;" onclick="clearResults()">🗑️ مسح النتائج</button>
+        <div style="display:flex;gap:8px;margin-right:auto;flex-wrap:wrap;">
+          <button class="btn" style="padding:8px 14px;font-size:0.78rem;background:rgba(155,89,182,0.12);border:1px solid rgba(155,89,182,0.4);color:#9B59B6;" onclick="clearDeviceLocks()">🔓 فتح قفل الأجهزة</button>
+          <button class="btn btn-danger" style="padding:8px 14px;font-size:0.78rem;" onclick="clearResults()">🗑️ مسح النتائج</button>
+        </div>
       </div>
 
       <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
@@ -846,6 +853,26 @@ function clearResults() {
   if (!confirm('هل تريد مسح جميع نتائج المتسابقين؟')) return;
   localStorage.removeItem('quizResults');
   renderResults();
+  updateStats();
+}
+
+function clearDeviceLocks() {
+  if (!confirm('هل تريد فتح قفل جميع الأجهزة؟ سيتمكن المتسابقون من الإجابة مجدداً.')) return;
+  localStorage.removeItem('__playedLog');
+  showAlert('✅ تم فتح قفل جميع الأجهزة', 'success');
+  updateStats();
+}
+
+function getPlayedLogCount() {
+  try {
+    const log = JSON.parse(localStorage.getItem('__playedLog') || '{}');
+    // Count unique devices for active/today questions
+    const today = new Date().toDateString();
+    return Object.keys(log).filter(k => {
+      const entry = log[k];
+      return new Date(entry.timestamp).toDateString() === today;
+    }).length;
+  } catch { return 0; }
 }
 
 function updateStats() {
@@ -859,6 +886,7 @@ function updateStats() {
   } else {
     document.getElementById('nextQ').textContent = '—';
   }
+  document.getElementById('participantsCount').textContent = getPlayedLogCount();
 }
 
 function copyLink() {
