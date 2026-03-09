@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم المشرف - المسابقة الثقافية</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #F0C060;
+    --dark: #0A0A12;
+    --dark2: #12121E;
+    --dark3: #1A1A2E;
+    --accent: #4A90D9;
+    --green: #2ECC71;
+    --red: #E74C3C;
+    --text: #E8E0D0;
+    --text-muted: #8A8090;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Cairo', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(74,144,217,0.06) 0%, transparent 50%);
+  }
+  .header {
+    background: linear-gradient(135deg, var(--dark2), var(--dark3));
+    border-bottom: 1px solid rgba(201,168,76,0.3);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-icon { font-size: 2rem; }
+  .header h1 {
+    font-family: 'Amiri', serif;
+    font-size: 1.8rem;
+    color: var(--gold);
+    font-weight: 700;
+  }
+  .header p { color: var(--text-muted); font-size: 0.85rem; margin-top: 2px; }
+  .badge {
+    margin-right: auto;
+    background: rgba(201,168,76,0.15);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+
+  .card {
+    background: var(--dark2);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(201,168,76,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-title .icon {
+    width: 36px; height: 36px;
+    background: rgba(201,168,76,0.15);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  input, textarea, select {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem;
+    padding: 12px 16px;
+    transition: all 0.3s;
+    outline: none;
+    margin-bottom: 20px;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.05);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+  }
+  textarea { resize: vertical; min-height: 100px; }
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .option-item { position: relative; }
+  .option-item label {
+    position: absolute;
+    top: -10px; right: 12px;
+    background: var(--dark2);
+    padding: 0 6px;
+    font-size: 0.75rem;
+    color: var(--gold);
+    z-index: 1;
+  }
+  .option-item input { margin-bottom: 0; }
+  .option-item.correct input {
+    border-color: var(--green);
+    background: rgba(46,204,113,0.05);
+  }
+
+  .correct-select {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .correct-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: var(--text-muted);
+    padding: 10px;
+    cursor: pointer;
+    text-align: center;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.85rem;
+    transition: all 0.3s;
+  }
+  .correct-btn:hover { border-color: var(--green); color: var(--green); }
+  .correct-btn.selected {
+    background: rgba(46,204,113,0.15);
+    border-color: var(--green);
+    color: var(--green);
+    font-weight: 700;
+  }
+
+  .time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .btn {
+    padding: 14px 32px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--dark);
+    width: 100%;
+    justify-content: center;
+    font-size: 1.1rem;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(201,168,76,0.4);
+  }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-danger {
+    background: rgba(231,76,60,0.15);
+    border: 1px solid var(--red);
+    color: var(--red);
+  }
+  .btn-danger:hover { background: rgba(231,76,60,0.25); }
+
+  .questions-list { display: flex; flex-direction: column; gap: 12px; }
+  .q-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s;
+  }
+  .q-item:hover { border-color: rgba(201,168,76,0.3); }
+  .q-item.active {
+    border-color: var(--green);
+    background: rgba(46,204,113,0.05);
+  }
+  .q-num {
+    width: 36px; height: 36px;
+    background: rgba(201,168,76,0.15);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    color: var(--gold);
+    flex-shrink: 0;
+    font-size: 0.9rem;
+  }
+  .q-info { flex: 1; }
+  .q-text { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+  .q-meta { font-size: 0.75rem; color: var(--text-muted); }
+  .q-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .q-status.scheduled {
+    background: rgba(74,144,217,0.15);
+    color: var(--accent);
+  }
+  .q-status.active-now {
+    background: rgba(46,204,113,0.15);
+    color: var(--green);
+  }
+  .q-status.past {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-muted);
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-num {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--gold);
+    font-family: 'Amiri', serif;
+  }
+  .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+  .alert {
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    display: none;
+  }
+  .alert.success { background: rgba(46,204,113,0.15); border: 1px solid var(--green); color: var(--green); }
+  .alert.error { background: rgba(231,76,60,0.15); border: 1px solid var(--red); color: var(--red); }
+  .alert.show { display: block; }
+
+  .result-row {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 8px;
+    transition: all 0.3s;
+  }
+  .result-row:hover { border-color: rgba(201,168,76,0.25); }
+  .result-row.correct { border-color: rgba(46,204,113,0.25); background: rgba(46,204,113,0.04); }
+  .result-row.wrong { border-color: rgba(231,76,60,0.15); }
+  .rank-badge {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .rank-1 { background: rgba(255,215,0,0.2); color: #FFD700; border: 1px solid rgba(255,215,0,0.4); }
+  .rank-2 { background: rgba(192,192,192,0.2); color: #C0C0C0; border: 1px solid rgba(192,192,192,0.3); }
+  .rank-3 { background: rgba(205,127,50,0.2); color: #CD7F32; border: 1px solid rgba(205,127,50,0.3); }
+  .rank-n { background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); }
+  .result-name { flex: 1; font-weight: 700; font-size: 0.95rem; }
+  .result-meta { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+  .time-chip {
+    background: rgba(74,144,217,0.12);
+    border: 1px solid rgba(74,144,217,0.25);
+    color: var(--accent);
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 0.78rem; font-weight: 700; white-space: nowrap;
+  }
+  .status-chip {
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 700; white-space: nowrap;
+  }
+  .chip-correct { background: rgba(46,204,113,0.15); color: var(--green); }
+  .chip-wrong { background: rgba(231,76,60,0.12); color: var(--red); }
+  .chip-timeup { background: rgba(230,126,34,0.15); color: #E67E22; }
+  .chip-dq { background: rgba(155,89,182,0.15); color: #9B59B6; }
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+
+  .tab-nav {
+    display: flex;
+    gap: 4px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 28px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s;
+  }
+  .tab-btn.active {
+    background: rgba(201,168,76,0.15);
+    color: var(--gold);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .link-box {
+    background: rgba(74,144,217,0.08);
+    border: 1px solid rgba(74,144,217,0.3);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .link-box code {
+    flex: 1;
+    color: var(--accent);
+    font-size: 0.85rem;
+    word-break: break-all;
+  }
+  .copy-btn {
+    background: rgba(74,144,217,0.2);
+    border: 1px solid rgba(74,144,217,0.4);
+    color: var(--accent);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.3s;
+  }
+  .copy-btn:hover { background: rgba(74,144,217,0.35); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🏆</div>
+  <div>
+    <h1>لوحة تحكم المشرف</h1>
+    <p>إدارة أسئلة المسابقة الثقافية اليومية</p>
+  </div>
+  <div class="badge">🔐 مشرف</div>
+</div>
+
+<div class="container">
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="totalQ">0</div>
+      <div class="stat-label">إجمالي الأسئلة</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="activeQ">-</div>
+      <div class="stat-label">السؤال النشط الآن</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="nextQ">-</div>
+      <div class="stat-label">السؤال القادم</div>
+    </div>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('add')">➕ إضافة سؤال</button>
+    <button class="tab-btn" onclick="switchTab('list')">📋 قائمة الأسئلة</button>
+    <button class="tab-btn" onclick="switchTab('results')">🏅 نتائج المتسابقين</button>
+    <button class="tab-btn" onclick="switchTab('share')">🔗 رابط المسابقة</button>
+  </div>
+
+  <!-- ADD QUESTION TAB -->
+  <div class="tab-content active" id="tab-add">
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">✏️</div>
+        إضافة سؤال جديد
+      </div>
+
+      <div class="alert" id="formAlert"></div>
+
+      <label>نص السؤال *</label>
+      <textarea id="questionText" placeholder="اكتب السؤال هنا..."></textarea>
+
+      <label>الخيارات *</label>
+      <div class="options-grid">
+        <div class="option-item" id="opt-a">
+          <label>أ</label>
+          <input type="text" id="optA" placeholder="الخيار الأول">
+        </div>
+        <div class="option-item" id="opt-b">
+          <label>ب</label>
+          <input type="text" id="optB" placeholder="الخيار الثاني">
+        </div>
+        <div class="option-item" id="opt-c">
+          <label>ج</label>
+          <input type="text" id="optC" placeholder="الخيار الثالث">
+        </div>
+        <div class="option-item" id="opt-d">
+          <label>د</label>
+          <input type="text" id="optD" placeholder="الخيار الرابع">
+        </div>
+      </div>
+
+      <label>الإجابة الصحيحة *</label>
+      <div class="correct-select">
+        <button class="correct-btn" onclick="selectCorrect('A')">أ</button>
+        <button class="correct-btn" onclick="selectCorrect('B')">ب</button>
+        <button class="correct-btn" onclick="selectCorrect('C')">ج</button>
+        <button class="correct-btn" onclick="selectCorrect('D')">د</button>
+      </div>
+
+      <div class="time-row">
+        <div>
+          <label>📅 تاريخ طرح السؤال *</label>
+          <input type="date" id="questionDate">
+        </div>
+        <div>
+          <label>⏰ وقت طرح السؤال *</label>
+          <input type="time" id="questionTime">
+        </div>
+      </div>
+
+      <label>⏱️ مدة السؤال (ثانية)</label>
+      <input type="number" id="duration" value="30" min="10" max="120">
+
+      <button class="btn btn-primary" onclick="saveQuestion()">💾 حفظ السؤال</button>
+    </div>
+  </div>
+
+  <!-- LIST TAB -->
+  <div class="tab-content" id="tab-list">
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">📋</div>
+        الأسئلة المجدولة
+      </div>
+      <div class="questions-list" id="questionsList">
+        <div class="empty-state">
+          <div class="icon">📭</div>
+          لا توجد أسئلة مجدولة بعد
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS TAB -->
+  <div class="tab-content" id="tab-results">
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">🏅</div>
+        نتائج المتسابقين
+        <button class="btn btn-danger" style="padding:8px 16px;font-size:0.8rem;margin-right:auto;" onclick="clearResults()">🗑️ مسح النتائج</button>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+        <select id="resultsFilter" onchange="renderResults()" style="flex:1;min-width:180px;margin:0;">
+          <option value="all">📋 جميع الأسئلة</option>
+        </select>
+        <select id="resultsSort" onchange="renderResults()" style="flex:1;min-width:160px;margin:0;">
+          <option value="time">⚡ الأسرع في الإجابة الصحيحة</option>
+          <option value="name">🔤 حسب الاسم</option>
+        </select>
+      </div>
+
+      <!-- Winners -->
+      <div style="margin-bottom:24px;">
+        <div style="font-size:0.8rem;color:var(--green);font-weight:700;margin-bottom:12px;letter-spacing:1px;">✅ أجابوا صح</div>
+        <div id="winnersContainer">
+          <div class="empty-state"><div class="icon">🏆</div>لا توجد إجابات صحيحة بعد</div>
+        </div>
+      </div>
+
+      <!-- Wrong -->
+      <div>
+        <div style="font-size:0.8rem;color:var(--red);font-weight:700;margin-bottom:12px;letter-spacing:1px;">❌ أجابوا خطأ / لم يجيبوا</div>
+        <div id="losersContainer">
+          <div class="empty-state"><div class="icon">📭</div>لا توجد بيانات</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHARE TAB -->
+  <div class="tab-content" id="tab-share">
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">🔗</div>
+        رابط صفحة المتسابقين
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+        شارك هذا الرابط مع المتسابقين. ستظهر الأسئلة تلقائياً في الوقت المحدد.
+      </p>
+      <div class="link-box">
+        <code id="quizLink">quiz-player.html</code>
+        <button class="copy-btn" onclick="copyLink()">📋 نسخ</button>
+      </div>
+      <div style="background: rgba(231,76,60,0.08); border: 1px solid rgba(231,76,60,0.3); border-radius: 10px; padding: 16px; margin-top: 12px;">
+        <p style="color: #E74C3C; font-size: 0.85rem; font-weight: 600;">⚠️ تنبيه للمتسابقين:</p>
+        <p style="color: var(--text-muted); font-size: 0.82rem; margin-top: 6px;">إذا غادر المتسابق الصفحة أثناء السؤال، ستُغلق الصفحة تلقائياً ولن يتمكن من العودة للإجابة.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let questions = JSON.parse(localStorage.getItem('quizQuestions') || '[]');
+let correctAnswer = null;
+
+// Set default date and time
+const now = new Date();
+document.getElementById('questionDate').value = now.toISOString().split('T')[0];
+const h = String(now.getHours()).padStart(2,'0');
+const m = String(now.getMinutes()).padStart(2,'0');
+document.getElementById('questionTime').value = `${h}:${m}`;
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+  if (tab === 'list') renderList();
+  if (tab === 'results') renderResults();
+  updateStats();
+}
+
+function selectCorrect(opt) {
+  correctAnswer = opt;
+  document.querySelectorAll('.correct-btn').forEach((btn, i) => {
+    btn.classList.remove('selected');
+    const opts = ['A','B','C','D'];
+    document.getElementById('opt-' + opts[i].toLowerCase()).classList.remove('correct');
+  });
+  event.target.classList.add('selected');
+  document.getElementById('opt-' + opt.toLowerCase()).classList.add('correct');
+}
+
+function showAlert(msg, type) {
+  const el = document.getElementById('formAlert');
+  el.textContent = msg;
+  el.className = `alert ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+function saveQuestion() {
+  const text = document.getElementById('questionText').value.trim();
+  const optA = document.getElementById('optA').value.trim();
+  const optB = document.getElementById('optB').value.trim();
+  const optC = document.getElementById('optC').value.trim();
+  const optD = document.getElementById('optD').value.trim();
+  const date = document.getElementById('questionDate').value;
+  const time = document.getElementById('questionTime').value;
+  const duration = parseInt(document.getElementById('duration').value);
+
+  if (!text) return showAlert('❌ يرجى كتابة نص السؤال', 'error');
+  if (!optA || !optB || !optC || !optD) return showAlert('❌ يرجى ملء جميع الخيارات الأربعة', 'error');
+  if (!correctAnswer) return showAlert('❌ يرجى تحديد الإجابة الصحيحة', 'error');
+  if (!date || !time) return showAlert('❌ يرجى تحديد التاريخ والوقت', 'error');
+
+  const q = {
+    id: Date.now(),
+    text, optA, optB, optC, optD,
+    correct: correctAnswer,
+    datetime: `${date}T${time}`,
+    duration: duration || 30,
+    createdAt: new Date().toISOString()
+  };
+
+  questions.push(q);
+  localStorage.setItem('quizQuestions', JSON.stringify(questions));
+
+  showAlert('✅ تم حفظ السؤال بنجاح!', 'success');
+  resetForm();
+  updateStats();
+}
+
+function resetForm() {
+  document.getElementById('questionText').value = '';
+  document.getElementById('optA').value = '';
+  document.getElementById('optB').value = '';
+  document.getElementById('optC').value = '';
+  document.getElementById('optD').value = '';
+  correctAnswer = null;
+  document.querySelectorAll('.correct-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.option-item').forEach(el => el.classList.remove('correct'));
+}
+
+function deleteQuestion(id) {
+  if (!confirm('هل تريد حذف هذا السؤال؟')) return;
+  questions = questions.filter(q => q.id !== id);
+  localStorage.setItem('quizQuestions', JSON.stringify(questions));
+  renderList();
+  updateStats();
+}
+
+function getStatus(q) {
+  const qTime = new Date(q.datetime).getTime();
+  const now = Date.now();
+  const end = qTime + q.duration * 1000;
+  if (now < qTime) return 'scheduled';
+  if (now >= qTime && now < end) return 'active';
+  return 'past';
+}
+
+function renderList() {
+  const el = document.getElementById('questionsList');
+  if (!questions.length) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📭</div>لا توجد أسئلة مجدولة بعد</div>';
+    return;
+  }
+  const sorted = [...questions].sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
+  el.innerHTML = sorted.map((q, i) => {
+    const st = getStatus(q);
+    const dt = new Date(q.datetime);
+    const statusLabel = { scheduled: '⏳ مجدول', active: '🟢 نشط الآن', past: '✅ انتهى' }[st];
+    const statusClass = { scheduled: 'scheduled', active: 'active-now', past: 'past' }[st];
+    return `
+      <div class="q-item ${st === 'active' ? 'active' : ''}">
+        <div class="q-num">${i+1}</div>
+        <div class="q-info">
+          <div class="q-text">${q.text.length > 60 ? q.text.slice(0,60)+'...' : q.text}</div>
+          <div class="q-meta">📅 ${dt.toLocaleDateString('ar-SA')} ⏰ ${dt.toLocaleTimeString('ar-SA', {hour:'2-digit',minute:'2-digit'})} · ⏱️ ${q.duration} ثانية</div>
+        </div>
+        <span class="q-status ${statusClass}">${statusLabel}</span>
+        <button class="btn btn-danger" style="padding: 8px 14px; font-size: 0.8rem;" onclick="deleteQuestion(${q.id})">🗑️</button>
+      </div>`;
+  }).join('');
+}
+
+function getResults() {
+  try { return JSON.parse(localStorage.getItem('quizResults') || '[]'); } catch { return []; }
+}
+
+function renderResults() {
+  const results = getResults();
+  const filterQ = document.getElementById('resultsFilter').value;
+  const sortBy = document.getElementById('resultsSort').value;
+
+  // Populate filter options
+  const qIds = [...new Set(results.map(r => r.questionId).filter(Boolean))];
+  const filterEl = document.getElementById('resultsFilter');
+  const currentFilter = filterEl.value;
+  filterEl.innerHTML = '<option value="all">📋 جميع الأسئلة</option>';
+  qIds.forEach(id => {
+    const r = results.find(x => x.questionId === id);
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = (r?.questionText || 'سؤال').slice(0, 40) + (r?.questionText?.length > 40 ? '...' : '');
+    if (String(id) === currentFilter) opt.selected = true;
+    filterEl.appendChild(opt);
+  });
+
+  let filtered = filterQ === 'all' ? results : results.filter(r => String(r.questionId) === filterQ);
+
+  const winners = filtered.filter(r => r.isCorrect && !r.disqualified);
+  const losers = filtered.filter(r => !r.isCorrect);
+
+  if (sortBy === 'time') winners.sort((a, b) => a.usedSeconds - b.usedSeconds);
+  else winners.sort((a, b) => a.playerName.localeCompare(b.playerName, 'ar'));
+
+  const rankClass = i => i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-n';
+  const rankLabel = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
+
+  const winnersEl = document.getElementById('winnersContainer');
+  if (!winners.length) {
+    winnersEl.innerHTML = '<div class="empty-state"><div class="icon">🏆</div>لا توجد إجابات صحيحة بعد</div>';
+  } else {
+    winnersEl.innerHTML = winners.map((r, i) => `
+      <div class="result-row correct">
+        <div class="rank-badge ${rankClass(i)}">${rankLabel(i)}</div>
+        <div style="flex:1;">
+          <div class="result-name">👤 ${r.playerName}</div>
+          <div class="result-meta">📅 ${new Date(r.timestamp).toLocaleString('ar-SA')}</div>
+        </div>
+        <div class="time-chip">⚡ ${r.usedSeconds} ث</div>
+        <div class="status-chip chip-correct">✅ صحيح</div>
+      </div>`).join('');
+  }
+
+  const losersEl = document.getElementById('losersContainer');
+  if (!losers.length) {
+    losersEl.innerHTML = '<div class="empty-state"><div class="icon">📭</div>لا توجد بيانات</div>';
+  } else {
+    losersEl.innerHTML = losers.map(r => {
+      const chipClass = r.disqualified ? 'chip-dq' : r.chosenOpt === null ? 'chip-timeup' : 'chip-wrong';
+      const chipLabel = r.disqualified ? '🚫 غادر الصفحة' : r.chosenOpt === null ? '⏰ انتهى الوقت' : '❌ خاطئ';
+      return `
+        <div class="result-row wrong">
+          <div class="rank-badge rank-n">—</div>
+          <div style="flex:1;">
+            <div class="result-name">👤 ${r.playerName}</div>
+            <div class="result-meta">📅 ${new Date(r.timestamp).toLocaleString('ar-SA')}</div>
+          </div>
+          <div class="status-chip ${chipClass}">${chipLabel}</div>
+        </div>`;
+    }).join('');
+  }
+}
+
+function clearResults() {
+  if (!confirm('هل تريد مسح جميع نتائج المتسابقين؟')) return;
+  localStorage.removeItem('quizResults');
+  renderResults();
+}
+
+function updateStats() {
+  document.getElementById('totalQ').textContent = questions.length;
+  const active = questions.find(q => getStatus(q) === 'active');
+  document.getElementById('activeQ').textContent = active ? '🟢 يوجد' : '—';
+  const upcoming = questions.filter(q => getStatus(q) === 'scheduled').sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
+  if (upcoming.length) {
+    const dt = new Date(upcoming[0].datetime);
+    document.getElementById('nextQ').textContent = dt.toLocaleTimeString('ar-SA', {hour:'2-digit',minute:'2-digit'});
+  } else {
+    document.getElementById('nextQ').textContent = '—';
+  }
+}
+
+function copyLink() {
+  navigator.clipboard.writeText('quiz-player.html').then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✅ تم النسخ';
+    setTimeout(() => btn.textContent = '📋 نسخ', 2000);
+  });
+}
+
+updateStats();
+setInterval(updateStats, 10000);
+</script>
+</body>
+</html>
