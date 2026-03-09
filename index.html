@@ -400,26 +400,18 @@ async function checkAlreadyPlayedOnLoad() {
 
 // ===== INIT =====
 async function init() {
-  // 1) اقرأ الكاش المحلي فوراً — الصفحة تعمل بدون انتظار
+  // ابدأ تحميل الأسئلة فوراً في الخلفية — المتسابق يكتب اسمه في نفس الوقت
   const cached = getCachedQuestions();
-  if (cached) {
-    allQuestions = cached;
-    const alreadyPlayed = await checkAlreadyPlayedOnLoad();
-    if (!alreadyPlayed) document.getElementById('nameInput').focus();
-    checkForActiveQuestion();
-    // 2) حدّث من Sheets في الخلفية بصمت
-    fetchAndCacheQuestions().then(fresh => {
-      if (fresh) allQuestions = fresh;
-    });
-  } else {
-    // أول مرة — لا كاش — حمّل من Sheets (مرة واحدة فقط)
-    const fresh = await fetchAndCacheQuestions();
-    allQuestions = fresh || [];
-    const alreadyPlayed = await checkAlreadyPlayedOnLoad();
-    if (!alreadyPlayed) document.getElementById('nameInput').focus();
-    checkForActiveQuestion();
-  }
-  // 3) تحديث دوري في الخلفية كل 30 ثانية
+  if (cached) allQuestions = cached; // استخدم الكاش فوراً إن وُجد
+
+  // حمّل من Sheets في الخلفية بدون انتظار
+  fetchAndCacheQuestions().then(fresh => {
+    if (fresh) allQuestions = fresh;
+  });
+
+  document.getElementById('nameInput').focus();
+
+  // تحديث دوري كل 30 ثانية
   setInterval(async () => {
     const fresh = await fetchAndCacheQuestions();
     if (fresh) allQuestions = fresh;
@@ -445,16 +437,20 @@ function triggerLock(){
 }
 
 // ===== NAME ENTRY =====
-function enterQuiz(){
+async function enterQuiz(){
   const input=document.getElementById('nameInput');
   const name=input.value.trim();
   if(!name){input.classList.add('error');document.getElementById('nameError').classList.add('show');input.focus();setTimeout(()=>input.classList.remove('error'),600);return;}
   playerName=name;
+  // تحقق من "شاركت مسبقاً" بعد إدخال الاسم
+  const alreadyPlayed = await checkAlreadyPlayedOnLoad();
+  if (alreadyPlayed) return;
   document.getElementById('nameScreen').classList.add('hide');
   document.getElementById('mainPage').style.display='flex';
   document.getElementById('playerBadge').textContent='👤 '+playerName;
   document.getElementById('qPlayerName').textContent='👤 '+playerName;
   document.getElementById('waitMsg').textContent=`مرحباً ${playerName}! سيظهر سؤال المسابقة في الوقت المحدد. كن مستعداً!`;
+  checkForActiveQuestion();
 }
 
 // ===== MAIN LOOP =====
