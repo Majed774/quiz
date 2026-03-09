@@ -213,7 +213,7 @@ textarea{resize:vertical;min-height:82px;}
 
     <!-- إضافة سؤال للبنك -->
     <div class="card">
-      <div class="card-title"><div class="cicon">✏️</div>إضافة سؤال للبنك</div>
+      <div class="card-title"><div class="cicon" id="bankFormIcon">✏️</div><span id="bankFormTitle">إضافة سؤال للبنك</span><button id="cancelEditBtn" onclick="cancelEdit()" style="display:none;margin-right:auto;background:#FEE2E2;border:2px solid #FECACA;color:var(--red);padding:5px 14px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:.8rem;font-weight:700;">✕ إلغاء التعديل</button></div>
       <div class="alert" id="bankAlert"></div>
 
       <label>نص السؤال *</label>
@@ -249,6 +249,7 @@ textarea{resize:vertical;min-height:82px;}
       </div>
       <div class="info-note">ℹ️ النقاط = <strong>2 + (90−t)/90</strong> للإجابة الصحيحة • 0 للخاطئة أو منتهية الوقت</div>
       <button class="btn btn-primary" id="saveBankBtn" onclick="saveBankQuestion()">💾 إضافة للبنك</button>
+      <input type="hidden" id="editingId" value="">
     </div>
 
     <!-- قائمة البنك -->
@@ -497,13 +498,22 @@ async function saveBankQuestion(){
   if(!text)               return showAlert('bankAlert','❌ يرجى كتابة نص السؤال','error');
   if(!optA||!optB||!optC||!optD) return showAlert('bankAlert','❌ يرجى ملء جميع الخيارات','error');
   if(!bankCorrect)        return showAlert('bankAlert','❌ يرجى تحديد الإجابة الصحيحة','error');
-  const q={id:Date.now(),text,optA,optB,optC,optD,correct:bankCorrect,answerSeconds:sec,createdAt:new Date().toISOString()};
+  const editingId = parseInt(document.getElementById('editingId').value)||0;
+  const isEdit = editingId > 0;
+  const q={
+    id: isEdit ? editingId : Date.now(),
+    text,optA,optB,optC,optD,
+    correct:bankCorrect,
+    answerSeconds:sec,
+    createdAt: isEdit ? (bankQuestions.find(x=>x.id===editingId)?.createdAt||new Date().toISOString()) : new Date().toISOString(),
+    updatedAt: isEdit ? new Date().toISOString() : undefined
+  };
   document.getElementById('saveBankBtn').disabled=true;
-  showLoad('جاري الحفظ...');
+  showLoad(isEdit?'جاري حفظ التعديلات...':'جاري الحفظ...');
   try{
     await fbSaveBank(q);
-    showAlert('bankAlert','✅ تمت إضافة السؤال للبنك!','success');
-    resetBankForm();
+    showAlert('bankAlert', isEdit?'✅ تم تعديل السؤال بنجاح!':'✅ تمت إضافة السؤال للبنك!','success');
+    cancelEdit();
   }catch(e){ showAlert('bankAlert','❌ خطأ في الحفظ','error'); }
   hideLoad();
   document.getElementById('saveBankBtn').disabled=false;
@@ -512,9 +522,44 @@ async function saveBankQuestion(){
 function resetBankForm(){
   ['bText','bOptA','bOptB','bOptC','bOptD'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('bSeconds').value='30';
+  document.getElementById('editingId').value='';
   bankCorrect=null;
   document.querySelectorAll('.correct-btn').forEach(b=>b.classList.remove('sel'));
   ['a','b','c','d'].forEach(l=>document.getElementById('bopt-'+l).classList.remove('correct'));
+}
+
+function editBankQuestion(id){
+  const q = bankQuestions.find(q=>q.id===id);
+  if(!q) return;
+  // ملء الفورم
+  document.getElementById('bText').value = q.text;
+  document.getElementById('bOptA').value = q.optA;
+  document.getElementById('bOptB').value = q.optB;
+  document.getElementById('bOptC').value = q.optC;
+  document.getElementById('bOptD').value = q.optD;
+  document.getElementById('bSeconds').value = q.answerSeconds||30;
+  document.getElementById('editingId').value = q.id;
+  // تحديد الإجابة الصحيحة
+  bankCorrect = q.correct;
+  document.querySelectorAll('.correct-btn').forEach(b=>b.classList.remove('sel'));
+  const optMap = {A:0,B:1,C:2,D:3};
+  document.querySelectorAll('.correct-btn')[optMap[q.correct]].classList.add('sel');
+  ['a','b','c','d'].forEach(l=>document.getElementById('bopt-'+l).classList.remove('correct'));
+  document.getElementById('bopt-'+q.correct.toLowerCase()).classList.add('correct');
+  // تغيير واجهة الفورم
+  document.getElementById('bankFormTitle').textContent = 'تعديل السؤال';
+  document.getElementById('bankFormIcon').textContent = '✏️';
+  document.getElementById('saveBankBtn').textContent = '💾 حفظ التعديلات';
+  document.getElementById('cancelEditBtn').style.display = 'block';
+  // scroll للفورم
+  document.getElementById('tab-bank').querySelector('.card').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelEdit(){
+  resetBankForm();
+  document.getElementById('bankFormTitle').textContent = 'إضافة سؤال للبنك';
+  document.getElementById('saveBankBtn').textContent = '💾 إضافة للبنك';
+  document.getElementById('cancelEditBtn').style.display = 'none';
 }
 
 async function deleteBankQuestion(id){
@@ -540,7 +585,10 @@ function renderBank(){
         <div class="bank-text">${q.text}</div>
         <div class="bank-meta">✅ ${optLabel[q.correct]}: ${q['opt'+q.correct]} • ⏱️ ${q.answerSeconds||30}ث</div>
       </div>
-      <button class="btn btn-sm btn-danger" onclick="deleteBankQuestion(${q.id})">🗑️</button>
+      <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
+        <button class="btn btn-sm" style="background:#EDE9FE;border:1.5px solid rgba(124,58,237,.3);color:var(--primary);" onclick="editBankQuestion(${q.id})">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteBankQuestion(${q.id})">🗑️</button>
+      </div>
     </div>
   `).join('');
 }
@@ -814,6 +862,8 @@ setInterval(()=>{ updateStats(); renderScheduleList(); },30000);
 
 // ── Exports ───────────────────────────────────────────────────
 window.switchTab         = switchTab;
+window.editBankQuestion  = editBankQuestion;
+window.cancelEdit        = cancelEdit;
 window.selectBankCorrect = selectBankCorrect;
 window.saveBankQuestion  = saveBankQuestion;
 window.deleteBankQuestion= deleteBankQuestion;
