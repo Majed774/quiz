@@ -6,142 +6,183 @@
 <title>لوحة تحكم المشرف – مسابقة الإتحاد الرمضانية</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --primary:#7C3AED;--primary-light:#A78BFA;--primary-dark:#5B21B6;
-    --secondary:#F59E0B;--accent:#EC4899;--accent2:#10B981;
-    --bg:#F5F3FF;--bg2:#FFFFFF;--bg3:#EDE9FE;
-    --text:#1E1B4B;--text-muted:#6B7280;--text-light:#9CA3AF;
-    --green:#059669;--red:#DC2626;--orange:#D97706;
-    --border:rgba(124,58,237,.15);
-    --shadow:0 4px 24px rgba(124,58,237,.1);
-    --shadow-lg:0 16px 56px rgba(124,58,237,.15);
-  }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
-    background-image:
-      radial-gradient(ellipse 600px 500px at 0% 0%,rgba(167,139,250,.25) 0%,transparent 70%),
-      radial-gradient(ellipse 400px 400px at 100% 100%,rgba(236,72,153,.15) 0%,transparent 70%),
-      radial-gradient(ellipse 300px 300px at 60% 40%,rgba(245,158,11,.1) 0%,transparent 70%);}
+:root{
+  --primary:#7C3AED;--accent:#EC4899;--secondary:#F59E0B;
+  --bg:#F5F3FF;--bg2:#fff;--bg3:#EDE9FE;
+  --text:#1E1B4B;--muted:#6B7280;--light:#9CA3AF;
+  --green:#059669;--red:#DC2626;--orange:#D97706;
+  --border:rgba(124,58,237,.15);
+  --sh:0 4px 24px rgba(124,58,237,.1);
+  --sh-lg:0 16px 56px rgba(124,58,237,.15);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+  background-image:radial-gradient(ellipse 600px 500px at 0% 0%,rgba(167,139,250,.22) 0%,transparent 70%),
+  radial-gradient(ellipse 400px 400px at 100% 100%,rgba(236,72,153,.13) 0%,transparent 70%);}
 
-  /* SETUP OVERLAY */
+/* LOADING */
+#loadingOverlay{position:fixed;inset:0;z-index:500;background:rgba(245,243,255,.92);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;backdrop-filter:blur(8px);}
+#loadingOverlay.show{display:flex;}
+.spinner{width:46px;height:46px;border:4px solid rgba(124,58,237,.15);border-top-color:var(--primary);border-right-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  /* LOADING */
-  #loadingOverlay{position:fixed;inset:0;z-index:500;background:rgba(245,243,255,.9);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;backdrop-filter:blur(8px);}
-  #loadingOverlay.show{display:flex;}
-  .spinner{width:48px;height:48px;border:4px solid rgba(124,58,237,.15);border-top-color:var(--primary);border-right-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .loading-msg{color:var(--primary);font-size:.9rem;font-weight:600;}
+/* HEADER */
+.header{background:rgba(255,255,255,.9);backdrop-filter:blur(18px);border-bottom:2px solid var(--border);padding:14px 32px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 18px rgba(124,58,237,.07);position:sticky;top:0;z-index:100;}
+.header h1{font-family:'Amiri',serif;font-size:1.55rem;color:var(--primary);font-weight:700;line-height:1.3;}
+.header p{color:var(--muted);font-size:.72rem;margin-top:1px;}
+.badge{margin-right:auto;background:linear-gradient(135deg,#EDE9FE,#DDD6FE);border:1.5px solid rgba(124,58,237,.3);color:var(--primary);padding:5px 16px;border-radius:20px;font-size:.78rem;font-weight:700;}
 
-  /* HEADER */
-  .header{background:rgba(255,255,255,.88);backdrop-filter:blur(18px);border-bottom:2px solid var(--border);padding:18px 40px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 20px rgba(124,58,237,.08);position:sticky;top:0;z-index:100;}
-  .header-icon{font-size:2rem;}
-  .header h1{font-family:'Amiri',serif;font-size:1.8rem;color:var(--primary);font-weight:700;}
-  .header p{color:var(--text-muted);font-size:.82rem;margin-top:2px;}
-  .badge{margin-right:auto;background:linear-gradient(135deg,#EDE9FE,#DDD6FE);border:1.5px solid rgba(124,58,237,.3);color:var(--primary);padding:6px 18px;border-radius:20px;font-size:.8rem;font-weight:700;}
+/* LAYOUT */
+.container{max-width:940px;margin:0 auto;padding:28px 18px;}
+.card{background:var(--bg2);border:2px solid var(--border);border-radius:20px;padding:26px;margin-bottom:22px;box-shadow:var(--sh);}
+.card-title{font-size:1rem;font-weight:800;color:var(--primary);margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.cicon{width:32px;height:32px;background:linear-gradient(135deg,#EDE9FE,#DDD6FE);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;}
 
-  /* LAYOUT */
-  .container{max-width:920px;margin:0 auto;padding:40px 20px;}
-  .card{background:var(--bg2);border:2px solid var(--border);border-radius:20px;padding:32px;margin-bottom:24px;position:relative;overflow:hidden;box-shadow:var(--shadow);}
-  .card::before{content:'';position:absolute;top:0;right:0;width:200px;height:200px;background:radial-gradient(circle,rgba(124,58,237,.04) 0%,transparent 70%);pointer-events:none;}
-  .card-title{font-size:1.1rem;font-weight:800;color:var(--primary);margin-bottom:24px;display:flex;align-items:center;gap:10px;}
-  .card-title .icon{width:36px;height:36px;background:linear-gradient(135deg,#EDE9FE,#DDD6FE);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+/* FORM */
+label{display:block;font-size:.82rem;color:var(--primary);margin-bottom:6px;font-weight:700;}
+input,textarea,select{width:100%;background:var(--bg3);border:2px solid var(--border);border-radius:11px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:.95rem;padding:10px 14px;transition:all .3s;outline:none;margin-bottom:14px;}
+input:focus,textarea:focus,select:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 4px rgba(124,58,237,.08);}
+textarea{resize:vertical;min-height:82px;}
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.opt-item{position:relative;}
+.opt-item label{position:absolute;top:-9px;right:11px;background:var(--bg2);padding:0 6px;font-size:.72rem;color:var(--primary);z-index:1;border-radius:4px;}
+.opt-item input{margin-bottom:0;}
+.opt-item.correct input{border-color:var(--green);background:#F0FDF4;}
+.correct-sel{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px;}
+.correct-btn{background:var(--bg3);border:2px solid var(--border);border-radius:9px;color:var(--muted);padding:9px;cursor:pointer;text-align:center;font-family:'Tajawal',sans-serif;font-size:.88rem;font-weight:600;transition:all .25s;}
+.correct-btn:hover{border-color:var(--green);color:var(--green);background:#F0FDF4;}
+.correct-btn.sel{background:linear-gradient(135deg,#D1FAE5,#A7F3D0);border-color:#6EE7B7;color:var(--green);font-weight:800;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
 
-  /* FORM */
-  label{display:block;font-size:.85rem;color:var(--primary);margin-bottom:8px;font-weight:700;}
-  input,textarea,select{width:100%;background:var(--bg3);border:2px solid var(--border);border-radius:12px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:1rem;padding:12px 16px;transition:all .3s;outline:none;margin-bottom:20px;}
-  input:focus,textarea:focus,select:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 4px rgba(124,58,237,.08);}
-  textarea{resize:vertical;min-height:100px;}
-  .options-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
-  .option-item{position:relative;}
-  .option-item label{position:absolute;top:-10px;right:12px;background:var(--bg2);padding:0 8px;font-size:.75rem;color:var(--primary);z-index:1;border-radius:4px;}
-  .option-item input{margin-bottom:0;}
-  .option-item.correct input{border-color:var(--green);background:#F0FDF4;}
-  .correct-select{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;}
-  .correct-btn{background:var(--bg3);border:2px solid var(--border);border-radius:10px;color:var(--text-muted);padding:10px;cursor:pointer;text-align:center;font-family:'Tajawal',sans-serif;font-size:.88rem;font-weight:600;transition:all .25s;}
-  .correct-btn:hover{border-color:var(--green);color:var(--green);background:#F0FDF4;}
-  .correct-btn.selected{background:linear-gradient(135deg,#D1FAE5,#A7F3D0);border-color:#6EE7B7;color:var(--green);font-weight:800;}
-  .time-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+/* BUTTONS */
+.btn{padding:9px 22px;border-radius:11px;border:none;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:.9rem;font-weight:700;transition:all .3s;display:inline-flex;align-items:center;gap:7px;}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;width:100%;justify-content:center;font-size:1rem;padding:13px;box-shadow:0 8px 26px rgba(124,58,237,.28);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(124,58,237,.38);}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-outline{background:var(--bg3);border:2px solid var(--border);color:var(--primary);}
+.btn-outline:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+.btn-danger{background:#FEF2F2;border:2px solid #FECACA;color:var(--red);}
+.btn-danger:hover{background:#FEE2E2;}
+.btn-sm{padding:6px 12px;font-size:.76rem;border-radius:8px;}
+.btn-green{background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;box-shadow:0 6px 20px rgba(5,150,105,.25);}
+.btn-green:hover{transform:translateY(-2px);}
 
-  /* BUTTONS */
-  .btn{padding:12px 28px;border-radius:12px;border:none;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:1rem;font-weight:700;transition:all .3s;display:inline-flex;align-items:center;gap:8px;}
-  .btn-primary{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;width:100%;justify-content:center;font-size:1.1rem;box-shadow:0 8px 28px rgba(124,58,237,.3);}
-  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(124,58,237,.4);}
-  .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
-  .btn-danger{background:#FEF2F2;border:2px solid #FECACA;color:var(--red);}
-  .btn-danger:hover{background:#FEE2E2;border-color:#FCA5A5;}
+/* ALERT */
+.alert{padding:11px 15px;border-radius:11px;margin-bottom:14px;font-size:.86rem;display:none;font-weight:600;}
+.alert.success{background:#D1FAE5;border:2px solid #6EE7B7;color:var(--green);}
+.alert.error{background:#FEE2E2;border:2px solid #FCA5A5;color:var(--red);}
+.alert.show{display:block;}
 
-  /* STATS */
-  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
-  .stat-card{background:var(--bg2);border:2px solid var(--border);border-radius:16px;padding:20px;text-align:center;box-shadow:var(--shadow);transition:all .3s;}
-  .stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
-  .stat-num{font-size:2rem;font-weight:900;color:var(--primary);font-family:'Amiri',serif;}
-  .stat-label{font-size:.8rem;color:var(--text-muted);margin-top:4px;font-weight:600;}
+/* TABS */
+.tab-nav{display:flex;gap:5px;background:var(--bg3);border-radius:14px;padding:5px;margin-bottom:22px;flex-wrap:wrap;border:2px solid var(--border);}
+.tab-btn{flex:1;min-width:80px;padding:9px 6px;background:none;border:none;color:var(--muted);font-family:'Tajawal',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;border-radius:10px;transition:all .3s;}
+.tab-btn.active{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.28);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
 
-  /* ALERT */
-  .alert{padding:14px 18px;border-radius:12px;margin-bottom:20px;font-size:.9rem;display:none;font-weight:600;}
-  .alert.success{background:#D1FAE5;border:2px solid #6EE7B7;color:var(--green);}
-  .alert.error{background:#FEE2E2;border:2px solid #FCA5A5;color:var(--red);}
-  .alert.show{display:block;}
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+.stat-card{background:var(--bg2);border:2px solid var(--border);border-radius:15px;padding:16px;text-align:center;box-shadow:var(--sh);}
+.stat-num{font-size:1.8rem;font-weight:900;color:var(--primary);font-family:'Amiri',serif;}
+.stat-label{font-size:.72rem;color:var(--muted);margin-top:3px;font-weight:600;}
 
-  /* TABS */
-  .tab-nav{display:flex;gap:6px;background:var(--bg3);border-radius:16px;padding:6px;margin-bottom:28px;flex-wrap:wrap;border:2px solid var(--border);}
-  .tab-btn{flex:1;min-width:100px;padding:10px;background:none;border:none;color:var(--text-muted);font-family:'Tajawal',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;border-radius:10px;transition:all .3s;}
-  .tab-btn.active{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.3);}
-  .tab-content{display:none;}
-  .tab-content.active{display:block;}
+/* QUESTION BANK LIST */
+.bank-item{background:var(--bg3);border:2px solid var(--border);border-radius:13px;padding:13px 16px;display:flex;align-items:flex-start;gap:12px;margin-bottom:8px;transition:all .25s;cursor:pointer;user-select:none;}
+.bank-item:hover{border-color:rgba(124,58,237,.35);background:#fff;box-shadow:var(--sh);}
+.bank-item.picking{border-color:var(--primary) !important;background:linear-gradient(135deg,#EDE9FE,#DDD6FE) !important;}
+.bank-item.picked-1{border-color:#059669 !important;background:linear-gradient(135deg,#D1FAE5,#A7F3D0) !important;}
+.bank-item.picked-2{border-color:#2563EB !important;background:linear-gradient(135deg,#DBEAFE,#BFDBFE) !important;}
+.bank-item.picked-3{border-color:#D97706 !important;background:linear-gradient(135deg,#FEF3C7,#FDE68A) !important;}
+.bank-num{width:32px;height:32px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;flex-shrink:0;font-size:.82rem;}
+.bank-info{flex:1;}
+.bank-text{font-size:.9rem;font-weight:700;margin-bottom:3px;color:var(--text);}
+.bank-meta{font-size:.72rem;color:var(--muted);}
+.bank-pick-badge{font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:8px;flex-shrink:0;display:none;}
+.bank-item.picked-1 .bank-pick-badge{display:block;background:#059669;color:#fff;}
+.bank-item.picked-2 .bank-pick-badge{display:block;background:#2563EB;color:#fff;}
+.bank-item.picked-3 .bank-pick-badge{display:block;background:#D97706;color:#fff;}
 
-  /* QUESTIONS LIST */
-  .empty-state{text-align:center;padding:48px;color:var(--text-muted);font-size:.9rem;}
-  .empty-state .icon{font-size:3rem;margin-bottom:12px;}
-  .questions-list{display:flex;flex-direction:column;gap:10px;}
-  .q-item{background:var(--bg3);border:2px solid var(--border);border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:16px;transition:all .25s;}
-  .q-item:hover{border-color:rgba(124,58,237,.35);background:#fff;box-shadow:var(--shadow);}
-  .q-item.active{border-color:#6EE7B7;background:linear-gradient(135deg,#F0FDF4,#ECFDF5);}
-  .q-num{width:36px;height:36px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;flex-shrink:0;font-size:.9rem;}
-  .q-info{flex:1;}
-  .q-text{font-size:.95rem;font-weight:700;margin-bottom:4px;color:var(--text);}
-  .q-meta{font-size:.75rem;color:var(--text-muted);}
-  .q-status{padding:4px 14px;border-radius:20px;font-size:.75rem;font-weight:700;}
-  .q-status.scheduled{background:#EFF6FF;border:1.5px solid #BFDBFE;color:#2563EB;}
-  .q-status.active-now{background:#D1FAE5;border:1.5px solid #6EE7B7;color:var(--green);}
-  .q-status.past{background:var(--bg3);border:1.5px solid var(--border);color:var(--text-muted);}
+/* DAY SCHEDULE PICKER */
+.pick-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.pick-slot{border-radius:12px;padding:12px;text-align:center;border:2px dashed var(--border);min-height:70px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .3s;}
+.pick-slot.empty{background:var(--bg3);color:var(--muted);font-size:.8rem;}
+.pick-slot.filled-1{background:linear-gradient(135deg,#D1FAE5,#A7F3D0);border:2px solid #059669;}
+.pick-slot.filled-2{background:linear-gradient(135deg,#DBEAFE,#BFDBFE);border:2px solid #2563EB;}
+.pick-slot.filled-3{background:linear-gradient(135deg,#FEF3C7,#FDE68A);border:2px solid #D97706;}
+.pick-slot-label{font-size:.72rem;font-weight:700;color:var(--muted);}
+.pick-slot.filled-1 .pick-slot-label{color:#059669;}
+.pick-slot.filled-2 .pick-slot-label{color:#2563EB;}
+.pick-slot.filled-3 .pick-slot-label{color:#D97706;}
+.pick-slot-text{font-size:.78rem;font-weight:700;color:var(--text);line-height:1.3;}
+.pick-slot-clear{background:none;border:none;cursor:pointer;font-size:.8rem;color:var(--red);margin-top:2px;}
 
-  /* RESULTS */
-  .result-row{background:var(--bg3);border:2px solid var(--border);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:8px;transition:all .25s;}
-  .result-row:hover{background:#fff;box-shadow:var(--shadow);}
-  .result-row.correct{border-color:#6EE7B7;background:linear-gradient(135deg,#F0FDF4,#ECFDF5);}
-  .rank-badge{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.85rem;flex-shrink:0;}
-  .rank-1{background:linear-gradient(135deg,#FEF9C3,#FEF08A);color:#A16207;border:1.5px solid #FCD34D;}
-  .rank-2{background:linear-gradient(135deg,#F1F5F9,#E2E8F0);color:#475569;border:1.5px solid #CBD5E1;}
-  .rank-3{background:linear-gradient(135deg,#FEF3C7,#FDE68A);color:#92400E;border:1.5px solid #F59E0B;}
-  .rank-n{background:var(--bg3);color:var(--text-muted);border:1.5px solid var(--border);}
-  .result-name{flex:1;font-weight:700;font-size:.95rem;color:var(--text);}
-  .result-meta{font-size:.78rem;color:var(--text-muted);margin-top:2px;}
-  .time-chip{background:#EFF6FF;border:1.5px solid #BFDBFE;color:#2563EB;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:700;white-space:nowrap;}
-  .status-chip{padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:700;white-space:nowrap;}
-  .chip-correct{background:#D1FAE5;border:1.5px solid #6EE7B7;color:var(--green);}
-  .chip-wrong{background:#FEE2E2;border:1.5px solid #FCA5A5;color:var(--red);}
-  .chip-timeup{background:#FEF3C7;border:1.5px solid #FCD34D;color:var(--orange);}
-  .chip-dq{background:#F3E8FF;border:1.5px solid #D8B4FE;color:#7C3AED;}
-  .link-box{background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:2px solid #BFDBFE;border-radius:12px;padding:16px;display:flex;align-items:center;gap:12px;margin-bottom:16px;}
-  .link-box code{flex:1;color:#1D4ED8;font-size:.85rem;word-break:break-all;font-weight:600;}
-  .copy-btn{background:#2563EB;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:.8rem;font-weight:700;white-space:nowrap;transition:all .3s;}
-  .copy-btn:hover{background:#1D4ED8;transform:translateY(-1px);}
+/* SCHEDULE LIST */
+.day-block{margin-bottom:20px;}
+.day-block-header{background:linear-gradient(135deg,var(--primary),#6D28D9);border-radius:13px;padding:12px 18px;margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+.day-block-title{font-family:'Amiri',serif;font-size:1.1rem;color:#fff;flex:1;}
+.day-block-time{font-size:.76rem;color:rgba(255,255,255,.8);}
+.day-block-status{padding:3px 12px;border-radius:20px;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.2);color:#fff;}
+.sched-q{background:var(--bg3);border:2px solid var(--border);border-radius:11px;padding:11px 15px;display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.sched-q-num{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.8rem;color:#fff;flex-shrink:0;}
+.sched-q-num.n1{background:linear-gradient(135deg,#059669,#10B981);}
+.sched-q-num.n2{background:linear-gradient(135deg,#2563EB,#3B82F6);}
+.sched-q-num.n3{background:linear-gradient(135deg,#D97706,#F59E0B);}
+.sched-q-text{flex:1;font-size:.86rem;font-weight:700;color:var(--text);}
+.sched-q-ans{font-size:.72rem;color:var(--green);font-weight:700;background:#D1FAE5;border:1px solid #6EE7B7;padding:2px 8px;border-radius:6px;}
 
-  @media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr);}.header{padding:14px 16px;}.time-row{grid-template-columns:1fr;}.options-grid{grid-template-columns:1fr;}}
+/* RESULTS */
+.participant-row{background:var(--bg3);border:2px solid var(--border);border-radius:13px;padding:12px 16px;margin-bottom:7px;transition:all .2s;}
+.participant-row:hover{background:#fff;box-shadow:var(--sh);}
+.participant-row.top1{border-color:#FCD34D;background:linear-gradient(135deg,#FFFBEB,#FEF3C7);}
+.participant-row.top2{border-color:#BAE6FD;background:linear-gradient(135deg,#F0F9FF,#E0F2FE);}
+.participant-row.top3{border-color:#FED7AA;background:linear-gradient(135deg,#FFF7ED,#FFEDD5);}
+.p-main{display:flex;align-items:center;gap:11px;}
+.p-rank{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.82rem;flex-shrink:0;background:var(--bg3);color:var(--primary);}
+.top1 .p-rank{background:linear-gradient(135deg,#FCD34D,#F59E0B);color:#fff;font-size:1.1rem;}
+.top2 .p-rank{background:linear-gradient(135deg,#93C5FD,#3B82F6);color:#fff;}
+.top3 .p-rank{background:linear-gradient(135deg,#FDBA74,#F97316);color:#fff;}
+.p-details{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;}
+.p-chip{padding:2px 9px;border-radius:7px;font-size:.7rem;font-weight:700;}
+.chip-c{background:#D1FAE5;border:1px solid #6EE7B7;color:var(--green);}
+.chip-w{background:#FEE2E2;border:1px solid #FCA5A5;color:var(--red);}
+.chip-t{background:#FEF3C7;border:1px solid #FCD34D;color:var(--orange);}
+
+/* LB */
+.lb-row{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:11px;margin-bottom:5px;border:2px solid transparent;}
+.lb-row.top1{background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border-color:#FCD34D;}
+.lb-row.top2{background:linear-gradient(135deg,#F0F9FF,#E0F2FE);border-color:#BAE6FD;}
+.lb-row.top3{background:linear-gradient(135deg,#FFF7ED,#FFEDD5);border-color:#FED7AA;}
+.lb-rank{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;background:var(--bg3);color:var(--primary);}
+.lb-row.top1 .lb-rank{background:linear-gradient(135deg,#FCD34D,#F59E0B);color:#fff;font-size:1.1rem;}
+.lb-row.top2 .lb-rank{background:linear-gradient(135deg,#93C5FD,#3B82F6);color:#fff;}
+.lb-row.top3 .lb-rank{background:linear-gradient(135deg,#FDBA74,#F97316);color:#fff;}
+
+.info-note{background:rgba(245,158,11,.07);border:1.5px solid rgba(245,158,11,.22);border-radius:10px;padding:10px 14px;font-size:.78rem;color:var(--orange);margin-bottom:14px;}
+.link-box{background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:2px solid #BFDBFE;border-radius:11px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.link-box code{flex:1;color:#1D4ED8;font-size:.83rem;word-break:break-all;font-weight:600;}
+.copy-btn{background:#2563EB;color:#fff;border:none;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:.78rem;font-weight:700;white-space:nowrap;}
+.copy-btn:hover{background:#1D4ED8;}
+.sec-title{font-size:.82rem;font-weight:800;color:var(--primary);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:6px;}
+
+@media(max-width:600px){
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .header{padding:12px 14px;}
+  .two-col,.three-col{grid-template-columns:1fr;}
+  .opts-grid{grid-template-columns:1fr;}
+  .pick-slots{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
 <div id="loadingOverlay">
   <div class="spinner"></div>
-  <div class="loading-msg" id="loadingMsg">جاري التحميل...</div>
+  <div style="color:var(--primary);font-size:.9rem;font-weight:600;" id="loadingMsg">جاري التحميل...</div>
 </div>
 
-
 <div class="header">
-  <div class="header-icon">🏆</div>
+  <div style="font-size:1.8rem;">🏆</div>
   <div>
     <h1>لوحة تحكم المشرف</h1>
     <p>مسابقة الإتحاد الرمضانية – العشر الأواخر</p>
@@ -150,536 +191,641 @@
 </div>
 
 <div class="container">
+
   <div class="stats-row">
-    <div class="stat-card"><div class="stat-num" id="totalQ">—</div><div class="stat-label">إجمالي الأسئلة</div></div>
-    <div class="stat-card"><div class="stat-num" id="activeQ">—</div><div class="stat-label">السؤال النشط</div></div>
-    <div class="stat-card"><div class="stat-num" id="participantsCount">—</div><div class="stat-label">شاركوا اليوم</div></div>
-    <div class="stat-card"><div class="stat-num" id="nextQ">—</div><div class="stat-label">السؤال القادم</div></div>
+    <div class="stat-card"><div class="stat-num" id="statBank">—</div><div class="stat-label">في البنك</div></div>
+    <div class="stat-card"><div class="stat-num" id="statSched">—</div><div class="stat-label">أيام مجدولة</div></div>
+    <div class="stat-card"><div class="stat-num" id="statToday">—</div><div class="stat-label">مشاركون اليوم</div></div>
+    <div class="stat-card"><div class="stat-num" id="statTotal">—</div><div class="stat-label">إجمالي المشاركات</div></div>
   </div>
 
   <div class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('add',this)">➕ إضافة سؤال</button>
-    <button class="tab-btn" onclick="switchTab('list',this)">📋 الأسئلة</button>
+    <button class="tab-btn active" onclick="switchTab('bank',this)">📚 بنك الأسئلة</button>
+    <button class="tab-btn" onclick="switchTab('schedule',this)">📅 جدولة يوم</button>
+    <button class="tab-btn" onclick="switchTab('list',this)">📋 الجدول</button>
     <button class="tab-btn" onclick="switchTab('results',this)">🏅 النتائج</button>
     <button class="tab-btn" onclick="switchTab('lb',this)">🏆 الترتيب</button>
     <button class="tab-btn" onclick="switchTab('share',this)">🔗 الرابط</button>
   </div>
 
-  <!-- ADD -->
-  <div class="tab-content active" id="tab-add">
+  <!-- ===== TAB: BANK ===== -->
+  <div class="tab-content active" id="tab-bank">
+
+    <!-- إضافة سؤال للبنك -->
     <div class="card">
-      <div class="card-title"><div class="icon">✏️</div>إضافة سؤال جديد</div>
-      <div class="alert" id="formAlert"></div>
+      <div class="card-title"><div class="cicon">✏️</div>إضافة سؤال للبنك</div>
+      <div class="alert" id="bankAlert"></div>
 
       <label>نص السؤال *</label>
-      <textarea id="questionText" placeholder="اكتب السؤال هنا..."></textarea>
+      <textarea id="bText" placeholder="اكتب السؤال هنا..."></textarea>
 
       <label>الخيارات *</label>
-      <div class="options-grid">
-        <div class="option-item" id="opt-a"><label>أ</label><input type="text" id="optA" placeholder="الخيار الأول"></div>
-        <div class="option-item" id="opt-b"><label>ب</label><input type="text" id="optB" placeholder="الخيار الثاني"></div>
-        <div class="option-item" id="opt-c"><label>ج</label><input type="text" id="optC" placeholder="الخيار الثالث"></div>
-        <div class="option-item" id="opt-d"><label>د</label><input type="text" id="optD" placeholder="الخيار الرابع"></div>
+      <div class="opts-grid">
+        <div class="opt-item" id="bopt-a"><label>أ</label><input type="text" id="bOptA" placeholder="الخيار الأول"></div>
+        <div class="opt-item" id="bopt-b"><label>ب</label><input type="text" id="bOptB" placeholder="الخيار الثاني"></div>
+        <div class="opt-item" id="bopt-c"><label>ج</label><input type="text" id="bOptC" placeholder="الخيار الثالث"></div>
+        <div class="opt-item" id="bopt-d"><label>د</label><input type="text" id="bOptD" placeholder="الخيار الرابع"></div>
       </div>
 
       <label>الإجابة الصحيحة *</label>
-      <div class="correct-select">
-        <button class="correct-btn" onclick="selectCorrect('A',this)">أ</button>
-        <button class="correct-btn" onclick="selectCorrect('B',this)">ب</button>
-        <button class="correct-btn" onclick="selectCorrect('C',this)">ج</button>
-        <button class="correct-btn" onclick="selectCorrect('D',this)">د</button>
+      <div class="correct-sel">
+        <button class="correct-btn" onclick="selectBankCorrect('A',this)">أ</button>
+        <button class="correct-btn" onclick="selectBankCorrect('B',this)">ب</button>
+        <button class="correct-btn" onclick="selectBankCorrect('C',this)">ج</button>
+        <button class="correct-btn" onclick="selectBankCorrect('D',this)">د</button>
       </div>
 
-      <div class="time-row" style="margin-bottom:20px;">
-        <div><label>📅 يوم السؤال *</label><input type="date" id="questionDay" style="margin-bottom:0;"></div>
-        <div>
-          <label>🔢 رقم السؤال في اليوم *</label>
-          <select id="questionOrder" style="margin-bottom:0;background:var(--bg3);border:2px solid var(--border);border-radius:12px;color:var(--text);font-family:Tajawal,sans-serif;font-size:.95rem;padding:11px 14px;width:100%;">
-            <option value="1">السؤال الأول (1)</option>
-            <option value="2">السؤال الثاني (2)</option>
-            <option value="3">السؤال الثالث (3)</option>
-          </select>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="margin:0;white-space:nowrap;">⏱️ وقت الإجابة:</label>
+          <input type="number" id="bSeconds" value="30" min="5" max="90" style="width:72px;text-align:center;font-weight:700;margin:0;">
+          <span style="color:var(--muted);font-size:.85rem;">ثانية</span>
+        </div>
+        <div style="display:flex;gap:5px;">
+          <button type="button" onclick="document.getElementById('bSeconds').value=15" style="background:var(--bg3);border:1.5px solid var(--border);color:var(--primary);padding:5px 11px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:.78rem;font-weight:700;">15ث</button>
+          <button type="button" onclick="document.getElementById('bSeconds').value=30" style="background:var(--bg3);border:1.5px solid var(--border);color:var(--primary);padding:5px 11px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:.78rem;font-weight:700;">30ث</button>
+          <button type="button" onclick="document.getElementById('bSeconds').value=60" style="background:var(--bg3);border:1.5px solid var(--border);color:var(--primary);padding:5px 11px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:.78rem;font-weight:700;">60ث</button>
         </div>
       </div>
-      <div style="background:rgba(245,158,11,.06);border:1.5px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:.78rem;color:var(--orange);">
-        ℹ️ النقاط = <strong>2 + (90−t)/90</strong> للإجابة الصحيحة • 0 للخاطئة أو منتهية الوقت
-      </div>
+      <div class="info-note">ℹ️ النقاط = <strong>2 + (90−t)/90</strong> للإجابة الصحيحة • 0 للخاطئة أو منتهية الوقت</div>
+      <button class="btn btn-primary" id="saveBankBtn" onclick="saveBankQuestion()">💾 إضافة للبنك</button>
+    </div>
 
-      <div style="background:rgba(74,144,217,.06);border:1px solid rgba(74,144,217,.25);border-radius:12px;padding:20px;margin-bottom:16px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-          <span style="font-size:1.3rem;">⏱️</span>
-          <div>
-            <div style="font-size:.9rem;color:var(--accent);font-weight:700;">وقت الإجابة الشخصي</div>
-            <div style="font-size:.75rem;color:var(--text-muted);margin-top:2px;">عدد الثواني للشخص بعد فتح السؤال — إذا تجاوزها تُحتسب خطأ</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap;">
-          <input type="number" id="answerSeconds" value="30" min="5" max="300" style="width:90px;text-align:center;font-size:1.2rem;font-weight:700;margin:0;" oninput="previewWindow()">
-          <span style="color:var(--text-muted);font-size:.9rem;">ثانية</span>
-          <div style="display:flex;gap:6px;">
-            <button type="button" onclick="setSeconds(15)" style="background:rgba(74,144,217,.12);border:1px solid rgba(74,144,217,.3);color:var(--accent);padding:5px 12px;border-radius:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:.8rem;font-weight:600;">15ث</button>
-            <button type="button" onclick="setSeconds(30)" style="background:rgba(74,144,217,.12);border:1px solid rgba(74,144,217,.3);color:var(--accent);padding:5px 12px;border-radius:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:.8rem;font-weight:600;">30ث</button>
-            <button type="button" onclick="setSeconds(60)" style="background:rgba(74,144,217,.12);border:1px solid rgba(74,144,217,.3);color:var(--accent);padding:5px 12px;border-radius:8px;cursor:pointer;font-family:Cairo,sans-serif;font-size:.8rem;font-weight:600;">60ث</button>
-          </div>
-        </div>
+    <!-- قائمة البنك -->
+    <div class="card">
+      <div class="card-title"><div class="cicon">📚</div>الأسئلة في البنك
+        <span id="bankCountBadge" style="margin-right:auto;background:var(--bg3);border:1.5px solid var(--border);color:var(--primary);padding:3px 12px;border-radius:20px;font-size:.75rem;font-weight:700;">0 سؤال</span>
       </div>
-
-      <div style="background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:12px;padding:20px;margin-bottom:20px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-          <span style="font-size:1.3rem;">📅</span>
-          <div>
-            <div style="font-size:.9rem;color:var(--gold);font-weight:700;">نافذة ظهور السؤال للجمهور</div>
-            <div style="font-size:.75rem;color:var(--text-muted);margin-top:2px;">خارج هذا النطاق لن يرى المتسابق السؤال إطلاقاً</div>
-          </div>
-        </div>
-        <div class="time-row" style="margin-top:14px;">
-          <div><label>🟢 من الساعة *</label><input type="time" id="timeStart" oninput="previewWindow()" style="margin-bottom:0;"></div>
-          <div><label>🔴 إلى الساعة *</label><input type="time" id="timeEnd" oninput="previewWindow()" style="margin-bottom:0;"></div>
-        </div>
-        <div id="windowPreview" style="display:none;border-radius:8px;padding:10px 14px;font-size:.85rem;text-align:center;margin-top:12px;"></div>
-      </div>
-
-      <button class="btn btn-primary" id="saveBtn" onclick="saveQuestion()">💾 حفظ السؤال</button>
+      <div id="bankList"><div style="text-align:center;padding:36px;color:var(--muted);">📭 لا توجد أسئلة في البنك بعد</div></div>
     </div>
   </div>
 
-  <!-- LIST -->
+  <!-- ===== TAB: SCHEDULE ===== -->
+  <div class="tab-content" id="tab-schedule">
+    <div class="card">
+      <div class="card-title"><div class="cicon">📅</div>جدولة أسئلة يوم</div>
+      <div class="alert" id="schedAlert"></div>
+
+      <!-- خطوة 1: اختيار اليوم والوقت -->
+      <div class="sec-title">📅 الخطوة 1 — اليوم ونافذة الظهور</div>
+      <div class="two-col" style="margin-bottom:14px;">
+        <div>
+          <label>📅 اليوم *</label>
+          <input type="date" id="schedDay" style="margin-bottom:0;">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <label>🟢 فتح *</label>
+            <input type="time" id="schedStart" style="margin-bottom:0;" oninput="updateSchedPreview()">
+          </div>
+          <div>
+            <label>🔴 إغلاق *</label>
+            <input type="time" id="schedEnd" style="margin-bottom:0;" oninput="updateSchedPreview()">
+          </div>
+        </div>
+      </div>
+      <div id="schedPreview" style="display:none;border-radius:9px;padding:9px 14px;font-size:.82rem;text-align:center;margin-bottom:14px;background:#D1FAE5;border:1.5px solid #6EE7B7;color:var(--green);"></div>
+
+      <!-- خطوة 2: اختيار 3 أسئلة -->
+      <div class="sec-title">🎯 الخطوة 2 — اختر 3 أسئلة من البنك (بالترتيب)</div>
+
+      <!-- خانات الاختيار -->
+      <div class="pick-slots" id="pickSlots">
+        <div class="pick-slot empty" id="slot0">
+          <div class="pick-slot-label">السؤال الأول</div>
+          <div style="font-size:1.4rem;">①</div>
+          <div style="font-size:.72rem;color:var(--light);">انقر سؤالاً أدناه</div>
+        </div>
+        <div class="pick-slot empty" id="slot1">
+          <div class="pick-slot-label">السؤال الثاني</div>
+          <div style="font-size:1.4rem;">②</div>
+          <div style="font-size:.72rem;color:var(--light);">انقر سؤالاً أدناه</div>
+        </div>
+        <div class="pick-slot empty" id="slot2">
+          <div class="pick-slot-label">السؤال الثالث</div>
+          <div style="font-size:1.4rem;">③</div>
+          <div style="font-size:.72rem;color:var(--light);">انقر سؤالاً أدناه</div>
+        </div>
+      </div>
+
+      <!-- قائمة البنك للاختيار -->
+      <div style="background:var(--bg3);border:2px solid var(--border);border-radius:13px;padding:14px;max-height:360px;overflow-y:auto;margin-bottom:16px;">
+        <div style="font-size:.78rem;color:var(--primary);font-weight:700;margin-bottom:10px;">انقر على سؤال لإضافته في الترتيب التالي:</div>
+        <div id="pickBankList"><div style="text-align:center;padding:24px;color:var(--muted);">📭 لا توجد أسئلة في البنك</div></div>
+      </div>
+
+      <button class="btn btn-green" id="scheduleBtn" onclick="scheduleDay()" style="width:100%;font-size:1rem;padding:13px;justify-content:center;">
+        🚀 جدولة الأسئلة الثلاثة
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== TAB: LIST ===== -->
   <div class="tab-content" id="tab-list">
     <div class="card">
-      <div class="card-title"><div class="icon">📋</div>الأسئلة المجدولة</div>
-      <div class="questions-list" id="questionsList"><div class="empty-state"><div class="icon">📭</div>لا توجد أسئلة</div></div>
+      <div class="card-title"><div class="cicon">📋</div>الجدول الزمني للأيام
+        <button class="btn btn-sm btn-danger" style="margin-right:auto;" onclick="if(confirm('مسح جميع الجدولة؟'))clearSchedule()">🗑️ مسح الجدول</button>
+      </div>
+      <div id="scheduleList"><div style="text-align:center;padding:36px;color:var(--muted);">📭 لا توجد أيام مجدولة</div></div>
     </div>
   </div>
 
-  <!-- RESULTS -->
+  <!-- ===== TAB: RESULTS ===== -->
   <div class="tab-content" id="tab-results">
     <div class="card">
       <div class="card-title">
-        <div class="icon">🏅</div>نتائج اليوم
-        <div style="display:flex;gap:8px;margin-right:auto;flex-wrap:wrap;">
-          <button class="btn" style="padding:8px 14px;font-size:.78rem;background:rgba(155,89,182,.12);border:1px solid rgba(155,89,182,.4);color:#9B59B6;" onclick="clearDeviceLocks()">🔓 فتح الأجهزة</button>
-          <button class="btn btn-danger" style="padding:8px 14px;font-size:.78rem;" onclick="clearResults()">🗑️ مسح النتائج</button>
+        <div class="cicon">🏅</div>نتائج اليوم
+        <div style="display:flex;gap:7px;margin-right:auto;flex-wrap:wrap;align-items:center;">
+          <select id="dayFilter" onchange="renderDayResults()" style="margin:0;padding:6px 11px;font-size:.78rem;width:auto;">
+            <option value="">— اختر اليوم —</option>
+          </select>
+          <button class="btn btn-sm btn-danger" onclick="clearDayResults()">🗑️ مسح اليوم</button>
+          <button class="btn btn-sm btn-danger" onclick="clearAllResults()">🗑️ مسح الكل</button>
         </div>
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
-        <select id="resultsFilter" onchange="renderResults()" style="flex:1;min-width:180px;margin:0;">
-          <option value="all">📋 جميع الأسئلة</option>
-        </select>
-        <select id="resultsSort" onchange="renderResults()" style="flex:1;min-width:160px;margin:0;">
-          <option value="time">⚡ الأسرع في الإجابة الصحيحة</option>
-          <option value="name">🔤 حسب الاسم</option>
-        </select>
-      </div>
-      <div style="margin-bottom:24px;">
-        <div style="font-size:.8rem;color:var(--green);font-weight:700;margin-bottom:12px;">✅ أجابوا صح</div>
-        <div id="winnersContainer"><div class="empty-state"><div class="icon">🏆</div>لا توجد إجابات صحيحة بعد</div></div>
-      </div>
-      <div>
-        <div style="font-size:.8rem;color:var(--red);font-weight:700;margin-bottom:12px;">❌ أجابوا خطأ / لم يجيبوا</div>
-        <div id="losersContainer"><div class="empty-state"><div class="icon">📭</div>لا توجد بيانات</div></div>
-      </div>
+      <div id="dayResultsContainer"><div style="text-align:center;padding:36px;color:var(--muted);">اختر يوماً لعرض نتائجه</div></div>
     </div>
   </div>
 
-  <!-- LEADERBOARD -->
+  <!-- ===== TAB: LB ===== -->
   <div class="tab-content" id="tab-lb">
     <div class="card">
-      <div class="card-title"><div class="icon">🏆</div>الترتيب التراكمي الكلي</div>
+      <div class="card-title"><div class="cicon">🏆</div>الترتيب التراكمي الكلي</div>
       <div id="lbContainer"><div style="text-align:center;padding:32px;color:var(--primary);">⏳ جاري التحميل...</div></div>
     </div>
   </div>
 
-  <!-- SHARE -->
+  <!-- ===== TAB: SHARE ===== -->
   <div class="tab-content" id="tab-share">
     <div class="card">
-      <div class="card-title"><div class="icon">🔗</div>رابط صفحة المتسابقين</div>
-      <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:20px;">شارك هذا الرابط مع المتسابقين. ستظهر الأسئلة تلقائياً في الوقت المحدد.</p>
+      <div class="card-title"><div class="cicon">🔗</div>رابط صفحة المتسابقين</div>
+      <p style="color:var(--muted);font-size:.88rem;margin-bottom:16px;">شارك هذا الرابط مع المتسابقين. تظهر أسئلة كل يوم تلقائياً في وقتها.</p>
       <div class="link-box">
         <code>https://majed774.github.io/quiz/</code>
         <button class="copy-btn" onclick="navigator.clipboard.writeText('https://majed774.github.io/quiz/').then(()=>{this.textContent='✅ تم';setTimeout(()=>this.textContent='📋 نسخ',2000)})">📋 نسخ</button>
       </div>
-      <div style="background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.3);border-radius:10px;padding:16px;margin-top:12px;">
-        <p style="color:#E74C3C;font-size:.85rem;font-weight:600;">⚠️ تنبيه للمتسابقين:</p>
-        <p style="color:var(--text-muted);font-size:.82rem;margin-top:6px;">إذا غادر المتسابق الصفحة أثناء السؤال، ستُغلق الجلسة تلقائياً ولن يتمكن من العودة للإجابة.</p>
+      <div style="background:#FEF3C7;border:2px solid #FCD34D;border-radius:11px;padding:12px 16px;">
+        <p style="color:#92400E;font-size:.82rem;font-weight:700;">⚠️ تذكير للمتسابقين:</p>
+        <p style="color:#78350F;font-size:.78rem;margin-top:4px;line-height:1.7;">لا تغادر الصفحة أثناء الأسئلة • لا توجد مشاركة جزئية • يُسمح بمشاركة واحدة يومياً فقط.</p>
       </div>
     </div>
   </div>
-</div>
+
+</div><!-- /container -->
 
 <script type="module">
-// ===== FIREBASE =====
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getDatabase, ref, get, set, push, remove, onValue }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCJoRWTXh-AJi4G2l8Q6AhccpLUoMXd1YQ",
-  authDomain: "quiz-862e9.firebaseapp.com",
-  databaseURL: "https://quiz-862e9-default-rtdb.firebaseio.com",
-  projectId: "quiz-862e9",
-  storageBucket: "quiz-862e9.firebasestorage.app",
-  messagingSenderId: "900530378554",
-  appId: "1:900530378554:web:9ebbe9a160daaad78da203"
+const FC = {
+  apiKey:"AIzaSyCJoRWTXh-AJi4G2l8Q6AhccpLUoMXd1YQ",
+  authDomain:"quiz-862e9.firebaseapp.com",
+  databaseURL:"https://quiz-862e9-default-rtdb.firebaseio.com",
+  projectId:"quiz-862e9",
+  storageBucket:"quiz-862e9.firebasestorage.app",
+  messagingSenderId:"900530378554",
+  appId:"1:900530378554:web:9ebbe9a160daaad78da203"
 };
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(FC);
 const db  = getDatabase(app);
 
-// ===== FIREBASE HELPERS =====
-async function fbGetQuestions() {
-  const snap = await get(ref(db, 'questions'));
-  if (!snap.exists()) return [];
-  return Object.entries(snap.val()).map(([k,v]) => ({...v, _key: k}));
-}
-async function fbSaveQuestion(q) {
-  await set(ref(db, 'questions/' + q.id), q);
-}
-async function fbDeleteQuestion(id) {
-  await remove(ref(db, 'questions/' + id));
-}
-async function fbGetResults() {
-  const snap = await get(ref(db, 'results'));
-  if (!snap.exists()) return [];
-  // New structure: results/{day}/{deviceId}
-  const raw = snap.val();
-  const flat = [];
-  for(const [day, devs] of Object.entries(raw)){
-    for(const [devId, data] of Object.entries(devs)){
-      // Flatten answers for backward compat display
-      if(data.answers){
-        data.answers.forEach((a,i)=>{
-          flat.push({
-            playerName: data.playerName,
-            questionId: a.qId||`${day}_q${i+1}`,
-            questionText: a.qText||`سؤال ${i+1}`,
-            isCorrect: a.isCorrect,
-            chosenOpt: a.chosen,
-            usedSeconds: a.usedSec||0,
-            points: a.points||0,
-            disqualified: a.disqualified||false,
-            timestamp: data.timestamp,
-            day: day,
-            totalPoints: data.totalPoints,
-            deviceId: devId
-          });
-        });
-      } else {
-        // Old structure fallback
-        flat.push({...data, day});
-      }
-    }
+// ── Firebase helpers ──────────────────────────────────────────
+async function fbGetBank()      { const s=await get(ref(db,'question_bank')); return s.exists()?Object.entries(s.val()).map(([k,v])=>({...v,_key:k})):[];}
+async function fbSaveBank(q)    { await set(ref(db,'question_bank/'+q.id),q); }
+async function fbDeleteBank(id) { await remove(ref(db,'question_bank/'+id)); }
+
+async function fbGetSchedule()  { const s=await get(ref(db,'schedule')); return s.exists()?s.val():{}; }
+async function fbSaveScheduleDay(day,data){ await set(ref(db,'schedule/'+day),data); }
+async function fbDeleteScheduleDay(day)  { await remove(ref(db,'schedule/'+day)); }
+async function fbClearSchedule()         { await remove(ref(db,'schedule')); }
+
+// questions node يُبنى من schedule لتوافق index.html
+async function fbRebuildQuestions(schedule){
+  await remove(ref(db,'questions'));
+  for(const [day,data] of Object.entries(schedule)){
+    data.questions.forEach((q,i)=>{
+      const qq={...q, day, order:i+1,
+        datetime:new Date(day+'T'+data.timeStart).toISOString(),
+        endDatetime:new Date(day+'T'+data.timeEnd).toISOString(),
+        timeStart:data.timeStart, timeEnd:data.timeEnd};
+      set(ref(db,'questions/'+qq.id), qq);
+    });
   }
-  return flat;
 }
 
-async function fbGetAllResultsByDay() {
-  const snap = await get(ref(db, 'results'));
-  return snap.exists() ? snap.val() : {};
+async function fbGetAllResults(){ const s=await get(ref(db,'results')); return s.exists()?s.val():{}; }
+async function fbClearDayResults(day){ await remove(ref(db,'results/'+day)); }
+async function fbClearAllResults()  { await remove(ref(db,'results')); }
+
+// ── State ─────────────────────────────────────────────────────
+let bankQuestions = [];
+let scheduleData  = {};    // { "2026-03-25": { timeStart, timeEnd, questions:[q,q,q] } }
+let allResults    = {};
+let bankCorrect   = null;
+let pickedIds     = [null, null, null];  // IDs للأسئلة المختارة
+
+// ── Helpers ───────────────────────────────────────────────────
+const todayStr = () => new Date().toISOString().split('T')[0];
+const fmtPts   = n  => (+n).toFixed(2);
+function showLoad(msg='جاري التحميل...'){
+  document.getElementById('loadingMsg').textContent=msg;
+  document.getElementById('loadingOverlay').classList.add('show');
 }
-async function fbClearResults() {
-  await remove(ref(db, 'results'));
-}
-async function fbClearLocks() {
-  await remove(ref(db, 'locks'));
+function hideLoad(){ document.getElementById('loadingOverlay').classList.remove('show'); }
+function showAlert(id,msg,type){
+  const el=document.getElementById(id);
+  el.textContent=msg; el.className=`alert ${type} show`;
+  setTimeout(()=>el.classList.remove('show'),4000);
 }
 
-let questions = [];
-let correctAnswer = null;
-let cachedResults = [];
-
-// ===== INIT =====
-window.addEventListener('DOMContentLoaded', () => {
-  const now = new Date();
-  if(document.getElementById('questionDay')) document.getElementById('questionDay').value = now.toISOString().split('T')[0];
-
+// ── Init ──────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('schedDay').value=todayStr();
   loadAll();
-  // استمع للتغييرات المباشرة
-  onValue(ref(db, 'questions'), snap => {
-    questions = snap.exists() ? Object.entries(snap.val()).map(([k,v])=>({...v,_key:k})) : [];
-    renderList(); updateStats();
+  onValue(ref(db,'question_bank'),snap=>{
+    bankQuestions=snap.exists()?Object.entries(snap.val()).map(([k,v])=>({...v,_key:k})):[];
+    renderBank(); renderPickBank(); updateStats();
+  });
+  onValue(ref(db,'schedule'),snap=>{
+    scheduleData=snap.exists()?snap.val():{};
+    renderScheduleList(); updateStats();
+  });
+  onValue(ref(db,'results'),snap=>{
+    allResults=snap.exists()?snap.val():{};
+    updateStats(); populateDayFilter();
   });
 });
 
-// ===== LOADING =====
-function showLoading(msg='جاري التحميل...') {
-  document.getElementById('loadingMsg').textContent = msg;
-  document.getElementById('loadingOverlay').classList.add('show');
-}
-function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
-
-async function loadAll() {
-  showLoading('جاري تحميل البيانات...');
-  try {
-    [questions, cachedResults] = await Promise.all([fbGetQuestions(), fbGetResults()]);
-  } catch(e) { questions = []; cachedResults = []; }
-  hideLoading();
-  updateStats();
-  renderList();
+async function loadAll(){
+  showLoad();
+  try{
+    [bankQuestions,scheduleData,allResults]=await Promise.all([fbGetBank(),fbGetSchedule(),fbGetAllResults()]);
+  }catch(e){ bankQuestions=[];scheduleData={};allResults={}; }
+  hideLoad();
+  renderBank(); renderPickBank(); renderScheduleList();
+  updateStats(); populateDayFilter();
 }
 
-// ===== TABS =====
-function switchTab(tab, el) {
-  document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
+// ── Tabs ──────────────────────────────────────────────────────
+function switchTab(tab,el){
+  document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
   if(el) el.classList.add('active');
-  if (tab === 'list') renderList();
-  if (tab === 'results') { loadResults(); }
-  if (tab === 'lb') { renderLeaderboard(); }
+  if(tab==='list')    renderScheduleList();
+  if(tab==='results'){ populateDayFilter(); renderDayResults(); }
+  if(tab==='lb')      renderLeaderboard();
 }
 
-// ===== FORM =====
-function selectCorrect(opt, btn) {
-  correctAnswer = opt;
-  document.querySelectorAll('.correct-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  ['A','B','C','D'].forEach(l => document.getElementById('opt-'+l.toLowerCase()).classList.remove('correct'));
-  document.getElementById('opt-'+opt.toLowerCase()).classList.add('correct');
-}
-function setSeconds(n) { document.getElementById('answerSeconds').value = n; previewWindow(); }
-function previewWindow() {
-  const ts=document.getElementById('timeStart').value, te=document.getElementById('timeEnd').value;
-  const ans=parseInt(document.getElementById('answerSeconds').value)||0;
-  const prev=document.getElementById('windowPreview');
-  if(!ts||!te){prev.style.display='none';return;}
-  const base=new Date();
-  const s=new Date(`${base.toDateString()} ${ts}`), e=new Date(`${base.toDateString()} ${te}`);
-  if(e<=s){prev.style.display='block';prev.style.cssText='display:block;background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.3);border-radius:8px;padding:10px 14px;color:var(--red);text-align:center;margin-top:12px;';prev.textContent='⚠️ وقت النهاية يجب أن يكون بعد البداية';return;}
-  const d=Math.floor((e-s)/1000),h=Math.floor(d/3600),m=Math.floor((d%3600)/60),sc=d%60;
-  let dl=''; if(h)dl+=`${h} ساعة `; if(m)dl+=`${m} دقيقة `; if(sc)dl+=`${sc} ثانية`;
-  prev.style.cssText='display:block;background:rgba(46,204,113,.08);border:1px solid rgba(46,204,113,.2);border-radius:8px;padding:10px 14px;color:var(--green);text-align:center;margin-top:12px;';
-  prev.innerHTML=`✅ نافذة الظهور: <strong>${ts}</strong> ← <strong>${te}</strong> (${dl.trim()})<br><span style="color:var(--accent);font-size:.8rem;">⏱️ وقت الإجابة الشخصي: ${ans} ثانية</span>`;
-}
-function showAlert(msg,type){const el=document.getElementById('formAlert');el.textContent=msg;el.className=`alert ${type} show`;setTimeout(()=>el.classList.remove('show'),4000);}
-
-async function saveQuestion() {
-  const text=document.getElementById('questionText').value.trim();
-  const optA=document.getElementById('optA').value.trim();
-  const optB=document.getElementById('optB').value.trim();
-  const optC=document.getElementById('optC').value.trim();
-  const optD=document.getElementById('optD').value.trim();
-  const date=document.getElementById('questionDay') ? document.getElementById('questionDay').value : new Date().toISOString().split('T')[0];
-  const answerSec=parseInt(document.getElementById('answerSeconds').value);
-  const timeStart=document.getElementById('timeStart').value;
-  const timeEnd=document.getElementById('timeEnd').value;
-  if(!text) return showAlert('❌ يرجى كتابة نص السؤال','error');
-  if(!optA||!optB||!optC||!optD) return showAlert('❌ يرجى ملء جميع الخيارات','error');
-  if(!correctAnswer) return showAlert('❌ يرجى تحديد الإجابة الصحيحة','error');
-
-  if(!answerSec||answerSec<5) return showAlert('❌ وقت الإجابة لا يمكن أن يكون أقل من 5 ثواني','error');
-  if(!timeStart||!timeEnd) return showAlert('❌ يرجى تحديد نافذة الظهور','error');
-  const dayVal=document.getElementById('questionDay').value; const startDt=new Date(`${dayVal}T${timeStart}`), endDt=new Date(`${dayVal}T${timeEnd}`);
-  if(endDt<=startDt) return showAlert('❌ وقت النهاية يجب أن يكون بعد البداية','error');
-  if(answerSec>Math.floor((endDt-startDt)/1000)) return showAlert('❌ وقت الإجابة أطول من نافذة الظهور!','error');
-  const day=document.getElementById('questionDay').value;
-  const order=parseInt(document.getElementById('questionOrder').value);
-  if(!day) return showAlert('❌ يرجى تحديد اليوم','error');
-  const existsQ=questions.find(q=>q.day===day && parseInt(q.order)===order);
-  if(existsQ) return showAlert(`❌ السؤال ${order} ليوم ${day} موجود بالفعل!`,'error');
-  const q={id:Date.now(),text,optA,optB,optC,optD,correct:correctAnswer,
-    day, order,
-    datetime:startDt.toISOString(),endDatetime:endDt.toISOString(),
-    timeStart,timeEnd,answerSeconds:answerSec,createdAt:new Date().toISOString()};
-  document.getElementById('saveBtn').disabled=true;
-  showLoading('جاري الحفظ...');
-  try {
-    await fbSaveQuestion(q);
-    showAlert('✅ تم حفظ السؤال بنجاح!','success');
-    resetForm(); updateStats();
-  } catch(e) { showAlert('❌ حدث خطأ في الحفظ','error'); }
-  hideLoading();
-  document.getElementById('saveBtn').disabled=false;
+// ── Question Bank ─────────────────────────────────────────────
+function selectBankCorrect(opt,btn){
+  bankCorrect=opt;
+  document.querySelectorAll('.correct-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  ['A','B','C','D'].forEach(l=>document.getElementById('bopt-'+l.toLowerCase()).classList.remove('correct'));
+  document.getElementById('bopt-'+opt.toLowerCase()).classList.add('correct');
 }
 
-function resetForm(){
-  ['questionText','optA','optB','optC','optD','timeStart','timeEnd'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('answerSeconds').value='30';
-  document.getElementById('windowPreview').style.display='none';
-  if(document.getElementById('questionDay')) document.getElementById('questionDay').value=new Date().toISOString().split('T')[0];
-  if(document.getElementById('questionOrder')) document.getElementById('questionOrder').value='1';
-  correctAnswer=null;
-  document.querySelectorAll('.correct-btn').forEach(b=>b.classList.remove('selected'));
-  ['a','b','c','d'].forEach(l=>document.getElementById('opt-'+l).classList.remove('correct'));
+async function saveBankQuestion(){
+  const text=document.getElementById('bText').value.trim();
+  const optA=document.getElementById('bOptA').value.trim();
+  const optB=document.getElementById('bOptB').value.trim();
+  const optC=document.getElementById('bOptC').value.trim();
+  const optD=document.getElementById('bOptD').value.trim();
+  const sec =parseInt(document.getElementById('bSeconds').value)||30;
+  if(!text)               return showAlert('bankAlert','❌ يرجى كتابة نص السؤال','error');
+  if(!optA||!optB||!optC||!optD) return showAlert('bankAlert','❌ يرجى ملء جميع الخيارات','error');
+  if(!bankCorrect)        return showAlert('bankAlert','❌ يرجى تحديد الإجابة الصحيحة','error');
+  const q={id:Date.now(),text,optA,optB,optC,optD,correct:bankCorrect,answerSeconds:sec,createdAt:new Date().toISOString()};
+  document.getElementById('saveBankBtn').disabled=true;
+  showLoad('جاري الحفظ...');
+  try{
+    await fbSaveBank(q);
+    showAlert('bankAlert','✅ تمت إضافة السؤال للبنك!','success');
+    resetBankForm();
+  }catch(e){ showAlert('bankAlert','❌ خطأ في الحفظ','error'); }
+  hideLoad();
+  document.getElementById('saveBankBtn').disabled=false;
 }
 
-async function deleteQuestion(id){
-  if(!confirm('هل تريد حذف هذا السؤال؟')) return;
-  showLoading('جاري الحذف...');
-  try {
-    await fbDeleteQuestion(id);
-    questions=questions.filter(q=>String(q.id)!==String(id));
-    renderList(); updateStats();
-  } catch(e){}
-  hideLoading();
+function resetBankForm(){
+  ['bText','bOptA','bOptB','bOptC','bOptD'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('bSeconds').value='30';
+  bankCorrect=null;
+  document.querySelectorAll('.correct-btn').forEach(b=>b.classList.remove('sel'));
+  ['a','b','c','d'].forEach(l=>document.getElementById('bopt-'+l).classList.remove('correct'));
 }
 
-// ===== STATUS =====
-function getStatus(q){
-  const now=Date.now(), start=new Date(q.datetime).getTime();
-  const end=q.endDatetime?new Date(q.endDatetime).getTime():start+(q.answerSeconds||30)*1000;
-  if(now<start) return 'scheduled';
-  if(now>=start&&now<end) return 'active';
-  return 'past';
+async function deleteBankQuestion(id){
+  if(!confirm('حذف هذا السؤال من البنك؟')) return;
+  showLoad('جاري الحذف...');
+  try{ await fbDeleteBank(id); }catch(e){}
+  hideLoad();
 }
 
-// ===== RENDER LIST =====
-function renderList(){
-  const el=document.getElementById('questionsList');
-  if(!questions.length){el.innerHTML='<div class="empty-state"><div class="icon">📭</div>لا توجد أسئلة مجدولة بعد</div>';return;}
-  const sorted=[...questions].sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
-  el.innerHTML=sorted.map((q,i)=>{
-    const st=getStatus(q);
-    const dtS=new Date(q.datetime), dtE=q.endDatetime?new Date(q.endDatetime):new Date(dtS.getTime()+(q.answerSeconds||30)*1000);
-    const fmt=dt=>dt.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
-    const diff=Math.floor((dtE-dtS)/1000);
-    const dur=diff>=3600?`${Math.floor(diff/3600)}س ${Math.floor((diff%3600)/60)}د`:diff>=60?`${Math.floor(diff/60)}د`:`${diff}ث`;
-    const sl={scheduled:'⏳ مجدول',active:'🟢 نشط',past:'✅ انتهى'}[st];
-    const sc={scheduled:'scheduled',active:'active-now',past:'past'}[st];
-    return `<div class="q-item ${st==='active'?'active':''}">
-      <div class="q-num">${i+1}</div>
-      <div class="q-info">
-        <div class="q-text">${q.text.length>60?q.text.slice(0,60)+'...':q.text}</div>
-        <div class="q-meta">📅 ${q.day||dtS.toLocaleDateString('ar-SA')} | س${q.order||'?'} | 🟢${fmt(dtS)} ← 🔴${fmt(dtE)} (${dur}) | ⏱️${q.answerSeconds||30}ث</div>
+function renderBank(){
+  const el=document.getElementById('bankList');
+  const badge=document.getElementById('bankCountBadge');
+  badge.textContent=bankQuestions.length+' سؤال';
+  if(!bankQuestions.length){
+    el.innerHTML='<div style="text-align:center;padding:36px;color:var(--muted);">📭 لا توجد أسئلة في البنك بعد</div>';
+    return;
+  }
+  const optLabel={A:'أ',B:'ب',C:'ج',D:'د'};
+  el.innerHTML=bankQuestions.map((q,i)=>`
+    <div class="bank-item" style="cursor:default;">
+      <div class="bank-num">${i+1}</div>
+      <div class="bank-info">
+        <div class="bank-text">${q.text}</div>
+        <div class="bank-meta">✅ ${optLabel[q.correct]}: ${q['opt'+q.correct]} • ⏱️ ${q.answerSeconds||30}ث</div>
       </div>
-      <span class="q-status ${sc}">${sl}</span>
-      <button class="btn btn-danger" style="padding:8px 14px;font-size:.8rem;" onclick="deleteQuestion(${q.id})">🗑️</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteBankQuestion(${q.id})">🗑️</button>
+    </div>
+  `).join('');
+}
+
+// ── Scheduling ────────────────────────────────────────────────
+function updateSchedPreview(){
+  const s=document.getElementById('schedStart').value;
+  const e=document.getElementById('schedEnd').value;
+  const prev=document.getElementById('schedPreview');
+  if(!s||!e){prev.style.display='none';return;}
+  const d=new Date(), st=new Date(`${d.toDateString()} ${s}`), en=new Date(`${d.toDateString()} ${e}`);
+  if(en<=st){prev.style.cssText='display:block;background:#FEE2E2;border:1.5px solid #FCA5A5;border-radius:9px;padding:9px;color:var(--red);text-align:center;margin-bottom:14px;';prev.textContent='⚠️ وقت الإغلاق يجب أن يكون بعد الفتح';return;}
+  const diff=Math.floor((en-st)/60000);
+  const h=Math.floor(diff/60),m=diff%60;
+  const dur=(h?h+'س ':'')+( m?m+'د':'');
+  prev.style.cssText='display:block;background:#D1FAE5;border:1.5px solid #6EE7B7;border-radius:9px;padding:9px;color:var(--green);text-align:center;margin-bottom:14px;';
+  prev.textContent=`✅ تفتح ${s} وتغلق ${e}  —  مدة الظهور: ${dur.trim()}`;
+}
+
+function renderPickBank(){
+  const el=document.getElementById('pickBankList');
+  if(!bankQuestions.length){
+    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);">📭 أضف أسئلة في البنك أولاً</div>';
+    return;
+  }
+  const optLabel={A:'أ',B:'ب',C:'ج',D:'د'};
+  el.innerHTML=bankQuestions.map((q,i)=>{
+    const slotIdx=pickedIds.indexOf(q.id);
+    const cls=slotIdx===-1?'bank-item':`bank-item picked-${slotIdx+1}`;
+    const badge=slotIdx===-1?'':['①','②','③'][slotIdx];
+    return `<div class="${cls}" id="pitem_${q.id}" onclick="togglePick(${q.id})">
+      <div class="bank-num">${i+1}</div>
+      <div class="bank-info">
+        <div class="bank-text">${q.text}</div>
+        <div class="bank-meta">✅ ${optLabel[q.correct]} • ⏱️ ${q.answerSeconds||30}ث</div>
+      </div>
+      <div class="bank-pick-badge">${badge}</div>
     </div>`;
   }).join('');
 }
 
-// ===== RESULTS =====
-async function loadResults(){
-  showLoading('جاري تحميل النتائج...');
-  try { cachedResults = await fbGetResults(); } catch(e){}
-  hideLoading();
-  renderResults();
-  updateStats();
+function togglePick(id){
+  const idx=pickedIds.indexOf(id);
+  if(idx!==-1){
+    // إلغاء الاختيار
+    pickedIds[idx]=null;
+  } else {
+    // أضف في أول خانة فارغة
+    const free=pickedIds.indexOf(null);
+    if(free===-1) return; // الثلاث ممتلئة
+    pickedIds[free]=id;
+  }
+  updatePickSlots();
+  renderPickBank();
 }
 
-function renderResults(){
-  const filterQ=document.getElementById('resultsFilter').value;
-  const sortBy=document.getElementById('resultsSort').value;
-  const qIds=[...new Set(cachedResults.map(r=>r.questionId).filter(Boolean))];
-  const filterEl=document.getElementById('resultsFilter');
-  const cur=filterEl.value;
-  filterEl.innerHTML='<option value="all">📋 جميع الأسئلة</option>';
-  qIds.forEach(id=>{
-    const r=cachedResults.find(x=>String(x.questionId)===String(id));
-    const opt=document.createElement('option');
-    opt.value=id; opt.textContent=(r?.questionText||'سؤال').slice(0,40);
-    if(String(id)===cur) opt.selected=true;
-    filterEl.appendChild(opt);
-  });
-  let filtered=filterQ==='all'?cachedResults:cachedResults.filter(r=>String(r.questionId)===filterQ);
-  const winners=filtered.filter(r=>r.isCorrect&&!r.disqualified);
-  const losers=filtered.filter(r=>!r.isCorrect);
-  if(sortBy==='time') winners.sort((a,b)=>a.usedSeconds-b.usedSeconds);
-  else winners.sort((a,b)=>(a.playerName||'').localeCompare(b.playerName||'','ar'));
-  const rk=i=>i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
-  const rl=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
-  const we=document.getElementById('winnersContainer');
-  we.innerHTML=winners.length?winners.map((r,i)=>`
-    <div class="result-row correct">
-      <div class="rank-badge ${rk(i)}">${rl(i)}</div>
-      <div style="flex:1;"><div class="result-name">👤 ${r.playerName}</div><div class="result-meta">📅 ${new Date(r.timestamp).toLocaleString('ar-SA')}</div></div>
-      <div class="time-chip">⚡ ${r.usedSeconds}ث</div>
-      <div class="status-chip chip-correct">✅ صحيح</div>
-    </div>`).join(''):'<div class="empty-state"><div class="icon">🏆</div>لا توجد إجابات صحيحة بعد</div>';
-  const le=document.getElementById('losersContainer');
-  le.innerHTML=losers.length?losers.map(r=>{
-    const cc=r.disqualified?'chip-dq':!r.chosenOpt?'chip-timeup':'chip-wrong';
-    const cl=r.disqualified?'🚫 غادر':!r.chosenOpt?'⏰ انتهى الوقت':'❌ خاطئ';
-    return `<div class="result-row">
-      <div class="rank-badge rank-n">—</div>
-      <div style="flex:1;"><div class="result-name">👤 ${r.playerName}</div><div class="result-meta">📅 ${new Date(r.timestamp).toLocaleString('ar-SA')}</div></div>
-      <div class="status-chip ${cc}">${cl}</div>
-    </div>`;
-  }).join(''):'<div class="empty-state"><div class="icon">📭</div>لا توجد بيانات</div>';
-}
-
-async function clearResults(){
-  if(!confirm('هل تريد مسح جميع النتائج؟')) return;
-  showLoading('جاري المسح...');
-  try{ await fbClearResults(); cachedResults=[]; renderResults(); updateStats(); }catch(e){}
-  hideLoading();
-}
-async function clearDeviceLocks(){
-  if(!confirm('هل تريد فتح قفل جميع الأجهزة؟')) return;
-  showLoading('جاري الفتح...');
-  try{
-    await fbClearLocks();
-    localStorage.removeItem('__playedLog');
-    updateStats();
-  }catch(e){}
-  hideLoading();
-  alert('✅ تم فتح قفل جميع الأجهزة');
-}
-
-// ===== STATS =====
-function updateStats(){
-  document.getElementById('totalQ').textContent=questions.length||'0';
-  const active=questions.find(q=>getStatus(q)==='active');
-  document.getElementById('activeQ').textContent=active?'🟢 يوجد':'—';
-  const upcoming=questions.filter(q=>getStatus(q)==='scheduled').sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
-  document.getElementById('nextQ').textContent=upcoming.length?new Date(upcoming[0].datetime).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'}):'—';
-  const todayKey=new Date().toISOString().split('T')[0];
-  const todaySnap=cachedResults.filter(r=>r.day===todayKey);
-  const todayCount=new Set(todaySnap.map(r=>r.deviceId||r.playerName)).size;
-  document.getElementById('participantsCount').textContent=todayCount;
-}
-
-setInterval(()=>{ updateStats(); renderList(); }, 30000);
-
-// ===== LEADERBOARD =====
-async function renderLeaderboard() {
-  const container = document.getElementById('lbContainer');
-  container.innerHTML='<div style="text-align:center;padding:24px;color:var(--primary);">⏳ جاري التحميل...</div>';
-  try {
-    const allRes = await fbGetAllResultsByDay();
-    const totals={};
-    for(const [day,devs] of Object.entries(allRes)){
-      for(const [devId,data] of Object.entries(devs)){
-        if(!totals[devId]) totals[devId]={name:data.playerName,total:0,days:0,correct:0};
-        totals[devId].total+=parseFloat(data.totalPoints||0);
-        totals[devId].days++;
-        totals[devId].correct+=(data.correctCount||0);
-      }
+function updatePickSlots(){
+  const labels=['السؤال الأول','السؤال الثاني','السؤال الثالث'];
+  const icons=['①','②','③'];
+  const colors=['filled-1','filled-2','filled-3'];
+  pickedIds.forEach((id,i)=>{
+    const slot=document.getElementById('slot'+i);
+    if(!id){
+      slot.className='pick-slot empty';
+      slot.innerHTML=`<div class="pick-slot-label">${labels[i]}</div><div style="font-size:1.4rem;">${icons[i]}</div><div style="font-size:.72rem;color:var(--light);">انقر سؤالاً أدناه</div>`;
+    } else {
+      const q=bankQuestions.find(q=>q.id===id);
+      slot.className=`pick-slot ${colors[i]}`;
+      slot.innerHTML=`<div class="pick-slot-label">${labels[i]}</div>
+        <div class="pick-slot-text">${q?q.text.slice(0,40)+(q.text.length>40?'...':''):''}</div>
+        <button class="pick-slot-clear" onclick="event.stopPropagation();clearSlot(${i})">✕ إلغاء</button>`;
     }
-    const sorted=Object.values(totals).sort((a,b)=>b.total-a.total);
-    if(!sorted.length){container.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted);">لا توجد نتائج بعد</div>';return;}
-    const fmtP=n=>(+n).toFixed(2);
-    const rankLabel=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
-    const rankBg=i=>i===0?'background:linear-gradient(135deg,#FCD34D,#F59E0B);color:#fff':
-                    i===1?'background:linear-gradient(135deg,#93C5FD,#3B82F6);color:#fff':
-                    i===2?'background:linear-gradient(135deg,#FDBA74,#F97316);color:#fff':
-                    'background:var(--bg3);color:var(--primary)';
-    const rowBg=i=>i===0?'background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border-color:#FCD34D':
-                   i===1?'background:linear-gradient(135deg,#F0F9FF,#E0F2FE);border-color:#BAE6FD':
-                   i===2?'background:linear-gradient(135deg,#FFF7ED,#FFEDD5);border-color:#FED7AA':
-                   'background:var(--bg3)';
-    container.innerHTML=sorted.slice(0,50).map((r,i)=>`
-      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;margin-bottom:6px;border:2px solid transparent;${rowBg(i)}">
-        <div style="width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;${rankBg(i)};font-size:${i<3?'1.1rem':'.85rem'}">${rankLabel(i)}</div>
-        <div style="flex:1">
-          <div style="font-weight:700;font-size:.9rem;">${r.name}</div>
-          <div style="font-size:.7rem;color:var(--text-muted);">${r.days} ${r.days===1?'يوم':'أيام'} • ${r.correct} إجابة صحيحة</div>
-        </div>
-        <div style="font-family:Amiri,serif;font-size:1.2rem;font-weight:700;color:var(--primary);">${fmtP(r.total)}</div>
-      </div>
-    `).join('');
-  } catch(e) { container.innerHTML='<div style="text-align:center;padding:32px;color:var(--red);">تعذر تحميل الترتيب</div>'; }
+  });
 }
 
-// ===== EXPORTS (لأن type=module يعزل الدوال) =====
-window.switchTab = switchTab;
-window.selectCorrect = selectCorrect;
-window.setSeconds = setSeconds;
-window.previewWindow = previewWindow;
-window.saveQuestion = saveQuestion;
-window.deleteQuestion = deleteQuestion;
-window.loadResults = loadResults;
-window.renderResults = renderResults;
-window.clearResults = clearResults;
-window.clearDeviceLocks = clearDeviceLocks;
+function clearSlot(i){
+  pickedIds[i]=null;
+  updatePickSlots();
+  renderPickBank();
+}
+
+async function scheduleDay(){
+  const day  = document.getElementById('schedDay').value;
+  const ts   = document.getElementById('schedStart').value;
+  const te   = document.getElementById('schedEnd').value;
+  if(!day)  return showAlert('schedAlert','❌ يرجى تحديد اليوم','error');
+  if(!ts||!te) return showAlert('schedAlert','❌ يرجى تحديد وقت الفتح والإغلاق','error');
+  if(pickedIds.some(id=>id===null)) return showAlert('schedAlert','❌ يرجى اختيار 3 أسئلة من البنك','error');
+  const startDt=new Date(`${day}T${ts}`), endDt=new Date(`${day}T${te}`);
+  if(endDt<=startDt) return showAlert('schedAlert','❌ وقت الإغلاق يجب أن يكون بعد الفتح','error');
+  if(scheduleData[day]) if(!confirm(`يوجد جدولة ليوم ${day} بالفعل. هل تريد استبدالها؟`)) return;
+
+  const questions=pickedIds.map(id=>bankQuestions.find(q=>q.id===id));
+  const data={ timeStart:ts, timeEnd:te, questions };
+
+  document.getElementById('scheduleBtn').disabled=true;
+  showLoad('جاري الجدولة...');
+  try{
+    await fbSaveScheduleDay(day,data);
+    // أعد بناء questions node
+    const newSchedule={...scheduleData,[day]:data};
+    await fbRebuildQuestions(newSchedule);
+    showAlert('schedAlert',`✅ تمت جدولة يوم ${day} بنجاح! الأسئلة تفتح ${ts} وتغلق ${te}`,'success');
+    // إعادة تعيين
+    pickedIds=[null,null,null];
+    updatePickSlots();
+    renderPickBank();
+  }catch(e){ showAlert('schedAlert','❌ خطأ في الجدولة: '+e.message,'error'); }
+  hideLoad();
+  document.getElementById('scheduleBtn').disabled=false;
+}
+
+// ── Schedule List ─────────────────────────────────────────────
+function renderScheduleList(){
+  const el=document.getElementById('scheduleList');
+  const days=Object.keys(scheduleData).sort();
+  if(!days.length){el.innerHTML='<div style="text-align:center;padding:36px;color:var(--muted);">📭 لا توجد أيام مجدولة</div>';return;}
+  const optLabel={A:'أ',B:'ب',C:'ج',D:'د'};
+  const now=Date.now();
+  el.innerHTML=days.reverse().map(day=>{
+    const d=scheduleData[day];
+    const startMs=new Date(`${day}T${d.timeStart}`).getTime();
+    const endMs  =new Date(`${day}T${d.timeEnd}`).getTime();
+    const status = now<startMs?'⏳ مجدول': now<endMs?'🟢 نشط الآن':'✅ انتهى';
+    const qs=d.questions||[];
+    return `<div class="day-block">
+      <div class="day-block-header">
+        <div>
+          <div class="day-block-title">📅 ${new Date(day+'T12:00:00').toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+          <div class="day-block-time">🟢 ${d.timeStart} ← 🔴 ${d.timeEnd}</div>
+        </div>
+        <div class="day-block-status">${status}</div>
+        <button class="btn btn-sm btn-danger" onclick="deleteScheduleDay('${day}')">🗑️</button>
+      </div>
+      ${qs.map((q,i)=>`
+        <div class="sched-q">
+          <div class="sched-q-num n${i+1}">${i+1}</div>
+          <div class="sched-q-text">${q.text}</div>
+          <div class="sched-q-ans">✅ ${optLabel[q.correct]}: ${q['opt'+q.correct]}</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-right:6px;">⏱️${q.answerSeconds||30}ث</div>
+        </div>
+      `).join('')}
+    </div>`;
+  }).join('');
+}
+
+async function deleteScheduleDay(day){
+  if(!confirm(`حذف جدولة يوم ${day}؟`)) return;
+  showLoad('جاري الحذف...');
+  try{
+    await fbDeleteScheduleDay(day);
+    // أعد بناء questions بدون هذا اليوم
+    const newSch={...scheduleData};
+    delete newSch[day];
+    await fbRebuildQuestions(newSch);
+  }catch(e){}
+  hideLoad();
+}
+
+async function clearSchedule(){
+  showLoad('جاري المسح...');
+  try{ await fbClearSchedule(); await remove(ref(db,'questions')); }catch(e){}
+  hideLoad();
+}
+
+// ── Results ───────────────────────────────────────────────────
+function populateDayFilter(){
+  const days=Object.keys(allResults).sort().reverse();
+  const sel=document.getElementById('dayFilter');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">— اختر اليوم —</option>';
+  days.forEach(d=>{
+    const opt=document.createElement('option');
+    opt.value=d;
+    opt.textContent=new Date(d+'T12:00:00').toLocaleDateString('ar-SA',{weekday:'long',month:'long',day:'numeric'});
+    if(d===cur||((!cur)&&d===todayStr())) opt.selected=true;
+    sel.appendChild(opt);
+  });
+  if(!cur&&days.includes(todayStr())) sel.value=todayStr();
+}
+
+function renderDayResults(){
+  const day=document.getElementById('dayFilter').value;
+  const c=document.getElementById('dayResultsContainer');
+  if(!day||!allResults[day]){c.innerHTML='<div style="text-align:center;padding:36px;color:var(--muted);">اختر يوماً لعرض نتائجه</div>';return;}
+  const devs=Object.values(allResults[day]).sort((a,b)=>b.totalPoints-a.totalPoints);
+  if(!devs.length){c.innerHTML='<div style="text-align:center;padding:36px;color:var(--muted);">لا توجد مشاركات لهذا اليوم</div>';return;}
+  const rCls=i=>i===0?'top1':i===1?'top2':i===2?'top3':'';
+  const rLbl=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+  c.innerHTML=devs.map((p,i)=>{
+    const ans=p.answers||[];
+    const chips=ans.map((a,qi)=>{
+      if(a.disqualified) return `<span class="p-chip" style="background:#F3E8FF;border:1px solid #D8B4FE;color:#7C3AED;">س${qi+1}:🚫</span>`;
+      if(a.isCorrect)    return `<span class="p-chip chip-c">س${qi+1}:✅ +${fmtPts(a.points)}</span>`;
+      if(!a.chosen)      return `<span class="p-chip chip-t">س${qi+1}:⏰</span>`;
+      return `<span class="p-chip chip-w">س${qi+1}:❌</span>`;
+    }).join('');
+    return `<div class="participant-row ${rCls(i)}">
+      <div class="p-main">
+        <div class="p-rank">${rLbl(i)}</div>
+        <div style="flex:1"><div style="font-weight:700;font-size:.9rem;">👤 ${p.playerName}</div>
+        <div style="font-size:.7rem;color:var(--muted);">⏰ ${new Date(p.timestamp).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}</div></div>
+        <div style="text-align:center">
+          <div style="font-family:Amiri,serif;font-size:1.25rem;font-weight:700;color:var(--primary);">${fmtPts(p.totalPoints)}</div>
+          <div style="font-size:.68rem;color:var(--muted);">${p.correctCount||0}/3 صح</div>
+        </div>
+      </div>
+      <div class="p-details">${chips}</div>
+    </div>`;
+  }).join('');
+}
+
+async function clearDayResults(){
+  const day=document.getElementById('dayFilter').value;
+  if(!day) return alert('اختر يوماً أولاً');
+  if(!confirm(`مسح نتائج يوم ${day}؟`)) return;
+  showLoad('جاري المسح...');
+  try{ await fbClearDayResults(day); delete allResults[day]; renderDayResults(); updateStats(); populateDayFilter(); }catch(e){}
+  hideLoad();
+}
+async function clearAllResults(){
+  if(!confirm('مسح جميع النتائج؟')) return;
+  showLoad('جاري المسح...');
+  try{ await fbClearAllResults(); allResults={}; renderDayResults(); updateStats(); populateDayFilter(); }catch(e){}
+  hideLoad();
+}
+
+// ── Leaderboard ───────────────────────────────────────────────
+function renderLeaderboard(){
+  const c=document.getElementById('lbContainer');
+  const totals={};
+  for(const [,devs] of Object.entries(allResults)){
+    for(const [devId,data] of Object.entries(devs)){
+      if(!totals[devId]) totals[devId]={name:data.playerName,total:0,days:0,correct:0};
+      totals[devId].total+=parseFloat(data.totalPoints||0);
+      totals[devId].days++;
+      totals[devId].correct+=(data.correctCount||0);
+    }
+  }
+  const sorted=Object.values(totals).sort((a,b)=>b.total-a.total);
+  if(!sorted.length){c.innerHTML='<div style="text-align:center;padding:36px;color:var(--muted);">لا توجد نتائج بعد</div>';return;}
+  const rCls=i=>i===0?'lb-row top1':i===1?'lb-row top2':i===2?'lb-row top3':'lb-row';
+  const rLbl=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+  const rBg =i=>i===0?'background:linear-gradient(135deg,#FCD34D,#F59E0B);color:#fff':
+                i===1?'background:linear-gradient(135deg,#93C5FD,#3B82F6);color:#fff':
+                i===2?'background:linear-gradient(135deg,#FDBA74,#F97316);color:#fff':
+                'background:var(--bg3);color:var(--primary)';
+  c.innerHTML=sorted.slice(0,50).map((r,i)=>`
+    <div class="${rCls(i)}">
+      <div class="lb-rank" style="${rBg(i)};font-size:${i<3?'1.1rem':'.85rem'}">${rLbl(i)}</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:.9rem;">${r.name}</div>
+        <div style="font-size:.7rem;color:var(--muted);">${r.days} ${r.days===1?'يوم':'أيام'} • ${r.correct} إجابة صحيحة</div>
+      </div>
+      <div style="font-family:Amiri,serif;font-size:1.2rem;font-weight:700;color:var(--primary);">${fmtPts(r.total)}</div>
+    </div>
+  `).join('');
+}
+
+// ── Stats ─────────────────────────────────────────────────────
+function updateStats(){
+  document.getElementById('statBank').textContent=bankQuestions.length||'0';
+  document.getElementById('statSched').textContent=Object.keys(scheduleData).length||'0';
+  const t=todayStr();
+  document.getElementById('statToday').textContent=allResults[t]?Object.keys(allResults[t]).length:'0';
+  let total=0; for(const d of Object.values(allResults)) total+=Object.keys(d).length;
+  document.getElementById('statTotal').textContent=total||'0';
+}
+
+setInterval(()=>{ updateStats(); renderScheduleList(); },30000);
+
+// ── Exports ───────────────────────────────────────────────────
+window.switchTab         = switchTab;
+window.selectBankCorrect = selectBankCorrect;
+window.saveBankQuestion  = saveBankQuestion;
+window.deleteBankQuestion= deleteBankQuestion;
+window.togglePick        = togglePick;
+window.clearSlot         = clearSlot;
+window.updateSchedPreview= updateSchedPreview;
+window.scheduleDay       = scheduleDay;
+window.deleteScheduleDay = deleteScheduleDay;
+window.clearSchedule     = clearSchedule;
+window.renderDayResults  = renderDayResults;
+window.clearDayResults   = clearDayResults;
+window.clearAllResults   = clearAllResults;
 window.renderLeaderboard = renderLeaderboard;
 </script>
 </body>
