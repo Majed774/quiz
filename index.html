@@ -3,232 +3,161 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مسابقة الإتحاد الثقافية - العشر الأواخر</title>
+<title>المسابقة الثقافية اليومية</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --gold: #C9A84C; --gold-light: #F0C060;
-    --dark: #070710; --dark2: #0E0E1C; --dark3: #151528;
-    --accent: #4A90D9; --green: #2ECC71; --red: #E74C3C;
-    --text: #F0E8D8; --text-muted: #706878;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Cairo',sans-serif; background:var(--dark); color:var(--text); min-height:100vh; overflow-x:hidden; position:relative; }
+  :root{--gold:#C9A84C;--gold-light:#F0C060;--dark:#070710;--dark2:#0E0E1C;--dark3:#151528;--accent:#4A90D9;--green:#2ECC71;--red:#E74C3C;--text:#F0E8D8;--text-muted:#706878;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Cairo',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;overflow-x:hidden;position:relative;}
 
-  .stars { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
-  .star { position:absolute; border-radius:50%; background:white; animation:twinkle var(--dur) var(--delay) infinite ease-in-out; }
-  @keyframes twinkle { 0%,100%{opacity:0.1;transform:scale(1)} 50%{opacity:0.8;transform:scale(1.4)} }
+  /* SETUP OVERLAY */
+  #setupOverlay{position:fixed;inset:0;z-index:9999;background:var(--dark);display:flex;align-items:center;justify-content:center;padding:20px;}
+  #setupOverlay.hidden{display:none;}
+  .setup-mini{width:100%;max-width:420px;background:var(--dark2);border:1px solid rgba(201,168,76,.3);border-radius:20px;padding:36px;text-align:center;}
+  .setup-mini h2{font-family:'Amiri',serif;font-size:1.5rem;color:var(--gold);margin-bottom:10px;}
+  .setup-mini p{color:var(--text-muted);font-size:.85rem;margin-bottom:24px;line-height:1.7;}
+  .setup-mini input{width:100%;background:rgba(255,255,255,.04);border:1.5px solid rgba(201,168,76,.2);border-radius:12px;color:var(--text);font-family:'Cairo',sans-serif;font-size:.85rem;padding:12px 14px;outline:none;transition:all .3s;margin-bottom:14px;text-align:center;}
+  .setup-mini input:focus{border-color:var(--gold);background:rgba(201,168,76,.05);}
+  .setup-mini button{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;border-radius:12px;color:var(--dark);font-family:'Cairo',sans-serif;font-size:1rem;font-weight:900;padding:14px;cursor:pointer;transition:all .3s;}
+  .setup-mini button:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,168,76,.4);}
+  .setup-err{color:var(--red);font-size:.8rem;margin-top:8px;display:none;}
+  .setup-err.show{display:block;}
 
-  /* NAME SCREEN */
-  #nameScreen {
-    position:fixed; inset:0; z-index:100;
-    display:flex; align-items:center; justify-content:center;
-    background:var(--dark);
-    background-image:radial-gradient(ellipse at 30% 30%, rgba(201,168,76,0.08) 0%, transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(74,144,217,0.05) 0%, transparent 60%);
-  }
-  #nameScreen.hide { animation:fadeOut 0.6s ease forwards; }
-  @keyframes fadeOut { to{opacity:0;pointer-events:none;visibility:hidden} }
+  .stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+  .star{position:absolute;border-radius:50%;background:white;animation:twinkle var(--dur) var(--delay) infinite ease-in-out;}
+  @keyframes twinkle{0%,100%{opacity:.1;transform:scale(1)}50%{opacity:.8;transform:scale(1.4)}}
 
-  .name-card {
-    width:100%; max-width:460px; margin:20px;
-    background:var(--dark2); border:1px solid rgba(201,168,76,0.25);
-    border-radius:28px; padding:48px 40px; text-align:center;
-    position:relative; overflow:hidden;
-    box-shadow:0 40px 100px rgba(0,0,0,0.6);
-    animation:slideUp 0.7s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  @keyframes slideUp { from{opacity:0;transform:translateY(40px) scale(0.95)} to{opacity:1;transform:translateY(0) scale(1)} }
-  .name-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg, transparent, var(--gold), transparent); }
-  .name-card::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.06) 0%, transparent 60%); pointer-events:none; }
-
-  .trophy-wrap {
-    width:90px; height:90px; background:rgba(201,168,76,0.1);
-    border:2px solid rgba(201,168,76,0.25); border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    margin:0 auto 24px; font-size:2.6rem; position:relative; z-index:1;
-  }
-  .trophy-wrap::before { content:''; position:absolute; inset:-6px; border-radius:50%; border:1px solid rgba(201,168,76,0.12); }
-
-  .name-title { font-family:'Amiri',serif; font-size:2rem; color:var(--gold); margin-bottom:8px; position:relative; z-index:1; }
-  .name-subtitle { color:var(--text-muted); font-size:0.9rem; line-height:1.7; margin-bottom:36px; position:relative; z-index:1; }
-
-  .name-input-wrap { position:relative; z-index:1; margin-bottom:16px; }
-  .name-input-label { display:block; text-align:right; font-size:0.82rem; color:var(--text-muted); font-weight:600; margin-bottom:10px; }
-  .name-input {
-    width:100%; background:rgba(255,255,255,0.04);
-    border:1.5px solid rgba(201,168,76,0.2); border-radius:14px;
-    color:var(--text); font-family:'Cairo',sans-serif; font-size:1.1rem; font-weight:600;
-    padding:16px 20px; outline:none; transition:all 0.3s; text-align:center;
-  }
-  .name-input::placeholder { color:var(--text-muted); font-weight:400; font-size:0.95rem; }
-  .name-input:focus { border-color:var(--gold); background:rgba(201,168,76,0.05); box-shadow:0 0 0 4px rgba(201,168,76,0.1); }
-  .name-input.error { border-color:var(--red); box-shadow:0 0 0 4px rgba(231,76,60,0.1); animation:shake2 0.4s ease; }
-  @keyframes shake2 { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
-
-  .name-error { color:var(--red); font-size:0.82rem; margin-top:8px; display:none; text-align:center; }
-  .name-error.show { display:block; }
-
-  .enter-btn {
-    width:100%; background:linear-gradient(135deg, var(--gold), var(--gold-light));
-    border:none; border-radius:14px; color:var(--dark);
-    font-family:'Cairo',sans-serif; font-size:1.05rem; font-weight:900; padding:16px;
-    cursor:pointer; transition:all 0.3s; position:relative; z-index:1; margin-top:8px;
-    display:flex; align-items:center; justify-content:center; gap:10px;
-  }
-  .enter-btn:hover { transform:translateY(-3px); box-shadow:0 12px 32px rgba(201,168,76,0.4); }
-  .enter-btn:active { transform:translateY(-1px); }
-
-  .name-rules {
-    margin-top:24px; background:rgba(231,76,60,0.06);
-    border:1px solid rgba(231,76,60,0.2); border-radius:12px; padding:14px 16px; position:relative; z-index:1;
-  }
-  .name-rules p { color:#E07060; font-size:0.8rem; line-height:1.8; }
-  .name-rules p strong { color:var(--red); }
+  /* ALREADY PLAYED */
+  #alreadyPlayedScreen{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;background:var(--dark);background-image:radial-gradient(ellipse at 50% 30%,rgba(231,76,60,.07) 0%,transparent 60%);}
+  #alreadyPlayedScreen.show{display:flex;}
+  .played-card{width:100%;max-width:460px;margin:20px;background:var(--dark2);border:1px solid rgba(231,76,60,.3);border-radius:28px;padding:48px 40px;text-align:center;position:relative;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.6);animation:slideUp .7s cubic-bezier(.34,1.56,.64,1);}
+  .played-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--red),transparent);}
+  .played-icon{font-size:4rem;margin-bottom:20px;animation:shake .6s ease;}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-12px)}40%{transform:translateX(12px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+  .played-title{font-family:'Amiri',serif;font-size:1.9rem;color:var(--red);margin-bottom:12px;}
+  .played-msg{color:var(--text-muted);font-size:.95rem;line-height:1.8;margin-bottom:24px;}
+  .played-name{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 20px;font-size:1rem;color:var(--text);font-weight:700;margin-bottom:20px;}
+  .played-result-box{border-radius:12px;padding:16px 20px;margin-bottom:8px;font-size:.9rem;font-weight:600;}
+  .played-result-box.correct{background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.3);color:var(--green);}
+  .played-result-box.wrong{background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.2);color:var(--red);}
+  .played-result-box.timeup{background:rgba(230,126,34,.1);border:1px solid rgba(230,126,34,.3);color:#E67E22;}
 
   /* LOCKED */
-  #lockedOverlay {
-    position:fixed; inset:0; background:rgba(7,7,16,0.97); z-index:9999;
-    display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; backdrop-filter:blur(20px);
-  }
-  #lockedOverlay.show { display:flex; }
-  .lock-icon { font-size:5rem; margin-bottom:24px; animation:shake 0.5s ease; }
-  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-12px)} 40%{transform:translateX(12px)} 60%{transform:translateX(-8px)} 80%{transform:translateX(8px)} }
-  .lock-title { font-family:'Amiri',serif; font-size:2rem; color:var(--red); margin-bottom:12px; }
-  .lock-msg { color:var(--text-muted); font-size:1rem; max-width:400px; line-height:1.7; margin-bottom:32px; }
-  .lock-btn {
-    background:rgba(231,76,60,0.15); border:1px solid var(--red); color:var(--red);
-    padding:14px 40px; border-radius:12px; font-family:'Cairo',sans-serif; font-size:1rem; font-weight:700; cursor:pointer; transition:all 0.3s;
-  }
-  .lock-btn:hover { background:rgba(231,76,60,0.25); transform:translateY(-2px); }
+  #lockedOverlay{position:fixed;inset:0;background:rgba(7,7,16,.97);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;backdrop-filter:blur(20px);}
+  #lockedOverlay.show{display:flex;}
+  .lock-icon{font-size:5rem;margin-bottom:24px;animation:shake .5s ease;}
+  .lock-title{font-family:'Amiri',serif;font-size:2rem;color:var(--red);margin-bottom:12px;}
+  .lock-msg{color:var(--text-muted);font-size:1rem;max-width:400px;line-height:1.7;margin-bottom:32px;}
+  .lock-btn{background:rgba(231,76,60,.15);border:1px solid var(--red);color:var(--red);padding:14px 40px;border-radius:12px;font-family:'Cairo',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all .3s;}
+  .lock-btn:hover{background:rgba(231,76,60,.25);transform:translateY(-2px);}
 
-  /* PAGE */
-  .page { position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; }
-  .progress-bar { height:3px; background:rgba(255,255,255,0.05); }
-  .progress-fill { height:100%; background:linear-gradient(90deg, var(--gold), var(--gold-light)); width:100%; transition:width 1s linear; }
+  /* NAME SCREEN */
+  #nameScreen{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:var(--dark);background-image:radial-gradient(ellipse at 30% 30%,rgba(201,168,76,.08) 0%,transparent 60%),radial-gradient(ellipse at 70% 70%,rgba(74,144,217,.05) 0%,transparent 60%);}
+  #nameScreen.hide{animation:fadeOut .6s ease forwards;}
+  @keyframes fadeOut{to{opacity:0;pointer-events:none;visibility:hidden}}
+  .name-card{width:100%;max-width:460px;margin:20px;background:var(--dark2);border:1px solid rgba(201,168,76,.25);border-radius:28px;padding:48px 40px;text-align:center;position:relative;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.6);animation:slideUp .7s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes slideUp{from{opacity:0;transform:translateY(40px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+  .name-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .name-card::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,.06) 0%,transparent 60%);pointer-events:none;}
+  .trophy-wrap{width:90px;height:90px;background:rgba(201,168,76,.1);border:2px solid rgba(201,168,76,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:2.6rem;position:relative;z-index:1;}
+  .trophy-wrap::before{content:'';position:absolute;inset:-6px;border-radius:50%;border:1px solid rgba(201,168,76,.12);}
+  .name-title{font-family:'Amiri',serif;font-size:2rem;color:var(--gold);margin-bottom:8px;position:relative;z-index:1;}
+  .name-subtitle{color:var(--text-muted);font-size:.9rem;line-height:1.7;margin-bottom:36px;position:relative;z-index:1;}
+  .name-input-wrap{position:relative;z-index:1;margin-bottom:16px;}
+  .name-input-label{display:block;text-align:right;font-size:.82rem;color:var(--text-muted);font-weight:600;margin-bottom:10px;}
+  .name-input{width:100%;background:rgba(255,255,255,.04);border:1.5px solid rgba(201,168,76,.2);border-radius:14px;color:var(--text);font-family:'Cairo',sans-serif;font-size:1.1rem;font-weight:600;padding:16px 20px;outline:none;transition:all .3s;text-align:center;}
+  .name-input::placeholder{color:var(--text-muted);font-weight:400;font-size:.95rem;}
+  .name-input:focus{border-color:var(--gold);background:rgba(201,168,76,.05);box-shadow:0 0 0 4px rgba(201,168,76,.1);}
+  .name-input.error{border-color:var(--red);animation:shake2 .4s ease;}
+  @keyframes shake2{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+  .name-error{color:var(--red);font-size:.82rem;margin-top:8px;display:none;text-align:center;}
+  .name-error.show{display:block;}
+  .enter-btn{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;border-radius:14px;color:var(--dark);font-family:'Cairo',sans-serif;font-size:1.05rem;font-weight:900;padding:16px;cursor:pointer;transition:all .3s;position:relative;z-index:1;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px;}
+  .enter-btn:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(201,168,76,.4);}
+  .name-rules{margin-top:24px;background:rgba(231,76,60,.06);border:1px solid rgba(231,76,60,.2);border-radius:12px;padding:14px 16px;position:relative;z-index:1;}
+  .name-rules p{color:#E07060;font-size:.8rem;line-height:1.8;}
+  .name-rules p strong{color:var(--red);}
 
-  .header {
-    padding:18px 32px; display:flex; align-items:center; justify-content:space-between;
-    border-bottom:1px solid rgba(201,168,76,0.12);
-    background:rgba(14,14,28,0.85); backdrop-filter:blur(12px);
-  }
-  .logo { display:flex; align-items:center; gap:12px; }
-  .logo-icon { font-size:1.8rem; }
-  .logo-text { font-family:'Amiri',serif; font-size:1.4rem; color:var(--gold); font-weight:700; }
-  .logo-sub { font-size:0.75rem; color:var(--text-muted); margin-top:1px; }
-  .header-right { display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
-
-  .player-name-badge {
-    display:flex; align-items:center; gap:8px;
-    background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.25);
-    padding:8px 16px; border-radius:20px; font-size:0.88rem; font-weight:700; color:var(--gold);
-  }
-  .live-badge {
-    display:flex; align-items:center; gap:8px;
-    background:rgba(46,204,113,0.12); border:1px solid rgba(46,204,113,0.3);
-    padding:6px 16px; border-radius:20px; font-size:0.8rem; color:var(--green); font-weight:600;
-  }
-  .live-dot { width:8px; height:8px; background:var(--green); border-radius:50%; animation:pulse 1.5s infinite; }
-  @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.4);opacity:0.6} }
-
-  /* WAITING */
-  #waitingState { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px; }
-  .wait-ring { width:140px; height:140px; border-radius:50%; border:2px solid rgba(201,168,76,0.2); display:flex; align-items:center; justify-content:center; margin:0 auto 32px; position:relative; }
-  .wait-ring::before { content:''; position:absolute; inset:8px; border-radius:50%; border:2px solid transparent; border-top-color:var(--gold); animation:spin 2s linear infinite; }
-  @keyframes spin { to{transform:rotate(360deg)} }
-  .wait-icon { font-size:3rem; }
-  .wait-title { font-family:'Amiri',serif; font-size:2rem; color:var(--gold); margin-bottom:12px; }
-  .wait-msg { color:var(--text-muted); font-size:1rem; line-height:1.8; max-width:450px; }
-  .next-countdown { margin-top:32px; background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.2); border-radius:16px; padding:24px 40px; text-align:center; }
-  .next-label { font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; }
-  .next-time { font-family:'Amiri',serif; font-size:2.4rem; color:var(--gold); font-weight:700; letter-spacing:2px; }
-
-  /* QUESTION */
-  #questionState { flex:1; display:none; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; }
-  #questionState.show { display:flex; }
-  .q-card { width:100%; max-width:720px; background:var(--dark2); border:1px solid rgba(201,168,76,0.2); border-radius:24px; overflow:hidden; box-shadow:0 32px 80px rgba(0,0,0,0.5); }
-  .q-header { background:linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05)); padding:24px 32px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(201,168,76,0.15); }
-  .q-header-left { display:flex; flex-direction:column; gap:4px; }
-  .q-label { font-size:0.8rem; color:var(--text-muted); font-weight:600; letter-spacing:1px; }
-  .q-player { font-size:0.9rem; color:var(--gold); font-weight:700; }
-
-  .timer-wrap { position:relative; width:70px; height:70px; }
-  .timer-svg { width:70px; height:70px; transform:rotate(-90deg); }
-  .timer-track { fill:none; stroke:rgba(255,255,255,0.06); stroke-width:4; }
-  .timer-prog { fill:none; stroke:var(--gold); stroke-width:4; stroke-linecap:round; stroke-dasharray:188.5; stroke-dashoffset:0; transition:stroke-dashoffset 1s linear, stroke 0.5s; }
-  .timer-text { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:900; color:var(--gold); font-family:'Amiri',serif; }
-
-  .q-body { padding:32px; }
-  .q-number { font-size:0.75rem; color:var(--gold); font-weight:700; margin-bottom:12px; letter-spacing:1px; }
-  .q-text { font-family:'Amiri',serif; font-size:1.6rem; line-height:1.7; color:var(--text); margin-bottom:32px; }
-
-  .options { display:flex; flex-direction:column; gap:12px; }
-  .opt-btn {
-    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1);
-    border-radius:14px; color:var(--text); font-family:'Cairo',sans-serif; font-size:1rem;
-    padding:16px 20px; cursor:pointer; display:flex; align-items:center; gap:16px;
-    transition:all 0.3s; text-align:right; width:100%; position:relative; overflow:hidden;
-  }
-  .opt-btn::before { content:''; position:absolute; right:0; top:0; bottom:0; width:0; background:rgba(201,168,76,0.08); transition:width 0.4s; }
-  .opt-btn:hover:not(:disabled)::before { width:100%; }
-  .opt-btn:hover:not(:disabled) { border-color:rgba(201,168,76,0.4); transform:translateX(-4px); }
-  .opt-letter { width:36px; height:36px; background:rgba(201,168,76,0.12); border:1px solid rgba(201,168,76,0.25); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--gold); font-size:0.9rem; flex-shrink:0; position:relative; z-index:1; transition:all 0.3s; }
-  .opt-btn span.opt-text { position:relative; z-index:1; flex:1; }
-  .opt-btn.correct { border-color:var(--green)!important; background:rgba(46,204,113,0.1)!important; }
-  .opt-btn.correct .opt-letter { background:rgba(46,204,113,0.2)!important; border-color:var(--green)!important; color:var(--green)!important; }
-  .opt-btn.wrong { border-color:var(--red)!important; background:rgba(231,76,60,0.08)!important; }
-  .opt-btn.wrong .opt-letter { background:rgba(231,76,60,0.15)!important; border-color:var(--red)!important; color:var(--red)!important; }
-  .opt-btn:disabled { cursor:not-allowed; }
-
-  /* RESULT */
-  #resultState { flex:1; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px; }
-  #resultState.show { display:flex; }
-  .result-icon { font-size:5rem; margin-bottom:20px; animation:bounceIn 0.6s cubic-bezier(0.34,1.56,0.64,1); }
-  @keyframes bounceIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
-  .result-player-name { font-size:1rem; color:var(--text-muted); margin-bottom:6px; }
-  .result-title { font-family:'Amiri',serif; font-size:2.2rem; margin-bottom:12px; }
-  .result-title.win { color:var(--green); }
-  .result-title.lose { color:var(--red); }
-  .result-msg { color:var(--text-muted); font-size:1rem; max-width:380px; line-height:1.7; }
-  .result-time-badge { margin-top:16px; background:rgba(74,144,217,0.1); border:1px solid rgba(74,144,217,0.3); border-radius:10px; padding:10px 24px; font-size:0.85rem; color:var(--accent); }
-  .correct-answer-reveal { margin-top:24px; background:rgba(46,204,113,0.08); border:1px solid rgba(46,204,113,0.3); border-radius:14px; padding:16px 28px; font-size:0.95rem; color:var(--green); }
-
-  @media(max-width:600px){ .q-text{font-size:1.3rem;} .header{padding:14px 16px;} .q-body{padding:20px 16px;} .name-card{padding:36px 24px;} }
-
-  /* ALREADY PLAYED SCREEN */
-  #alreadyPlayedScreen {
-    position:fixed; inset:0; z-index:200;
-    display:none; align-items:center; justify-content:center;
-    background:var(--dark);
-    background-image:radial-gradient(ellipse at 50% 30%, rgba(231,76,60,0.07) 0%, transparent 60%);
-  }
-  #alreadyPlayedScreen.show { display:flex; }
-  .played-card {
-    width:100%; max-width:460px; margin:20px;
-    background:var(--dark2);
-    border:1px solid rgba(231,76,60,0.3);
-    border-radius:28px; padding:48px 40px; text-align:center;
-    position:relative; overflow:hidden;
-    box-shadow:0 40px 100px rgba(0,0,0,0.6);
-    animation:slideUp 0.7s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  .played-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg, transparent, var(--red), transparent); }
-  .played-icon { font-size:4rem; margin-bottom:20px; animation:shake 0.6s ease; }
-  .played-title { font-family:'Amiri',serif; font-size:1.9rem; color:var(--red); margin-bottom:12px; }
-  .played-msg { color:var(--text-muted); font-size:0.95rem; line-height:1.8; margin-bottom:24px; }
-  .played-name { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:14px 20px; font-size:1rem; color:var(--text); font-weight:700; margin-bottom:20px; }
-  .played-result-box {
-    border-radius:12px; padding:16px 20px; margin-bottom:8px; font-size:0.9rem; font-weight:600;
-  }
-  .played-result-box.correct { background:rgba(46,204,113,0.1); border:1px solid rgba(46,204,113,0.3); color:var(--green); }
-  .played-result-box.wrong { background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); color:var(--red); }
-  .played-result-box.timeup { background:rgba(230,126,34,0.1); border:1px solid rgba(230,126,34,0.3); color:#E67E22; }
+  .page{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;}
+  .progress-bar{height:3px;background:rgba(255,255,255,.05);}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));width:100%;transition:width 1s linear;}
+  .header{padding:18px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(201,168,76,.12);background:rgba(14,14,28,.85);backdrop-filter:blur(12px);}
+  .logo{display:flex;align-items:center;gap:12px;}
+  .logo-icon{font-size:1.8rem;}
+  .logo-text{font-family:'Amiri',serif;font-size:1.4rem;color:var(--gold);font-weight:700;}
+  .logo-sub{font-size:.75rem;color:var(--text-muted);margin-top:1px;}
+  .header-right{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+  .player-name-badge{display:flex;align-items:center;gap:8px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);padding:8px 16px;border-radius:20px;font-size:.88rem;font-weight:700;color:var(--gold);}
+  .live-badge{display:flex;align-items:center;gap:8px;background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.3);padding:6px 16px;border-radius:20px;font-size:.8rem;color:var(--green);font-weight:600;}
+  .live-dot{width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite;}
+  @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.6}}
+  #waitingState{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;}
+  .wait-ring{width:140px;height:140px;border-radius:50%;border:2px solid rgba(201,168,76,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 32px;position:relative;}
+  .wait-ring::before{content:'';position:absolute;inset:8px;border-radius:50%;border:2px solid transparent;border-top-color:var(--gold);animation:spin 2s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .wait-icon{font-size:3rem;}
+  .wait-title{font-family:'Amiri',serif;font-size:2rem;color:var(--gold);margin-bottom:12px;}
+  .wait-msg{color:var(--text-muted);font-size:1rem;line-height:1.8;max-width:450px;}
+  .next-countdown{margin-top:32px;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:16px;padding:24px 40px;text-align:center;}
+  .next-label{font-size:.8rem;color:var(--text-muted);margin-bottom:8px;}
+  .next-time{font-family:'Amiri',serif;font-size:2.4rem;color:var(--gold);font-weight:700;letter-spacing:2px;}
+  #questionState{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;}
+  #questionState.show{display:flex;}
+  .q-card{width:100%;max-width:720px;background:var(--dark2);border:1px solid rgba(201,168,76,.2);border-radius:24px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.5);}
+  .q-header{background:linear-gradient(135deg,rgba(201,168,76,.15),rgba(201,168,76,.05));padding:24px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(201,168,76,.15);}
+  .q-header-left{display:flex;flex-direction:column;gap:4px;}
+  .q-label{font-size:.8rem;color:var(--text-muted);font-weight:600;letter-spacing:1px;}
+  .q-player{font-size:.9rem;color:var(--gold);font-weight:700;}
+  .timer-wrap{position:relative;width:70px;height:70px;}
+  .timer-svg{width:70px;height:70px;transform:rotate(-90deg);}
+  .timer-track{fill:none;stroke:rgba(255,255,255,.06);stroke-width:4;}
+  .timer-prog{fill:none;stroke:var(--gold);stroke-width:4;stroke-linecap:round;stroke-dasharray:188.5;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear,stroke .5s;}
+  .timer-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:900;color:var(--gold);font-family:'Amiri',serif;}
+  .q-body{padding:32px;}
+  .q-number{font-size:.75rem;color:var(--gold);font-weight:700;margin-bottom:12px;letter-spacing:1px;}
+  .q-text{font-family:'Amiri',serif;font-size:1.6rem;line-height:1.7;color:var(--text);margin-bottom:32px;}
+  .options{display:flex;flex-direction:column;gap:12px;}
+  .opt-btn{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:14px;color:var(--text);font-family:'Cairo',sans-serif;font-size:1rem;padding:16px 20px;cursor:pointer;display:flex;align-items:center;gap:16px;transition:all .3s;text-align:right;width:100%;position:relative;overflow:hidden;}
+  .opt-btn::before{content:'';position:absolute;right:0;top:0;bottom:0;width:0;background:rgba(201,168,76,.08);transition:width .4s;}
+  .opt-btn:hover:not(:disabled)::before{width:100%;}
+  .opt-btn:hover:not(:disabled){border-color:rgba(201,168,76,.4);transform:translateX(-4px);}
+  .opt-letter{width:36px;height:36px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.25);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold);font-size:.9rem;flex-shrink:0;position:relative;z-index:1;transition:all .3s;}
+  .opt-btn span.opt-text{position:relative;z-index:1;flex:1;}
+  .opt-btn.correct{border-color:var(--green)!important;background:rgba(46,204,113,.1)!important;}
+  .opt-btn.correct .opt-letter{background:rgba(46,204,113,.2)!important;border-color:var(--green)!important;color:var(--green)!important;}
+  .opt-btn.wrong{border-color:var(--red)!important;background:rgba(231,76,60,.08)!important;}
+  .opt-btn.wrong .opt-letter{background:rgba(231,76,60,.15)!important;border-color:var(--red)!important;color:var(--red)!important;}
+  .opt-btn:disabled{cursor:not-allowed;}
+  #resultState{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;}
+  #resultState.show{display:flex;}
+  .result-icon{font-size:5rem;margin-bottom:20px;animation:bounceIn .6s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes bounceIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+  .result-player-name{font-size:1rem;color:var(--text-muted);margin-bottom:6px;}
+  .result-title{font-family:'Amiri',serif;font-size:2.2rem;margin-bottom:12px;}
+  .result-title.win{color:var(--green);}
+  .result-title.lose{color:var(--red);}
+  .result-msg{color:var(--text-muted);font-size:1rem;max-width:380px;line-height:1.7;}
+  .result-time-badge{margin-top:16px;background:rgba(74,144,217,.1);border:1px solid rgba(74,144,217,.3);border-radius:10px;padding:10px 24px;font-size:.85rem;color:var(--accent);}
+  .correct-answer-reveal{margin-top:24px;background:rgba(46,204,113,.08);border:1px solid rgba(46,204,113,.3);border-radius:14px;padding:16px 28px;font-size:.95rem;color:var(--green);}
+  @media(max-width:600px){.q-text{font-size:1.3rem;}.header{padding:14px 16px;}.q-body{padding:20px 16px;}.name-card{padding:36px 24px;}}
 </style>
 </head>
 <body>
 
 <div class="stars" id="starsContainer"></div>
 
-<!-- ALREADY PLAYED SCREEN -->
+<!-- SETUP (للمتسابق — يحتاج رابط السكريبت) -->
+<div id="setupOverlay">
+  <div class="setup-mini">
+    <h2>⚙️ إعداد أولي</h2>
+    <p>أدخل رابط Google Apps Script الذي زوّدك به المشرف لتتمكن من المشاركة.</p>
+    <input type="text" id="playerScriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
+    <div class="setup-err" id="playerSetupErr">⚠️ الرابط غير صحيح، تأكد منه</div>
+    <button onclick="savePlayerScriptUrl()">دخول المسابقة ✅</button>
+  </div>
+</div>
+
+<!-- ALREADY PLAYED -->
 <div id="alreadyPlayedScreen">
   <div class="played-card">
     <div class="played-icon">🚫</div>
@@ -236,8 +165,16 @@
     <div class="played-msg">لقد شاركت في سؤال اليوم من هذا الجهاز.<br>يُسمح بمشاركة واحدة فقط لكل جهاز لضمان نزاهة المسابقة.</div>
     <div class="played-name" id="playedNameDisplay"></div>
     <div class="played-result-box" id="playedResultBox"></div>
-    <div style="color:var(--text-muted);font-size:0.8rem;margin-top:16px;">⏰ وقت مشاركتك: <span id="playedTimeDisplay"></span></div>
+    <div style="color:var(--text-muted);font-size:.8rem;margin-top:16px;">⏰ وقت مشاركتك: <span id="playedTimeDisplay"></span></div>
   </div>
+</div>
+
+<!-- LOCKED -->
+<div id="lockedOverlay">
+  <div class="lock-icon">🔒</div>
+  <div class="lock-title">انتهت فرصتك!</div>
+  <div class="lock-msg">غادرت الصفحة أثناء وقت السؤال.<br>لا يمكنك العودة للإجابة لضمان نزاهة المسابقة.</div>
+  <button class="lock-btn" onclick="document.body.innerHTML='<div style=\'font-family:Cairo;text-align:center;padding:80px;font-size:1.2rem;color:#E74C3C\'>🔒 تم إغلاق جلسة المسابقة</div>';window.close();">إغلاق الصفحة</button>
 </div>
 
 <!-- NAME SCREEN -->
@@ -245,10 +182,7 @@
   <div class="name-card">
     <div class="trophy-wrap">🏆</div>
     <div class="name-title">المسابقة الثقافية</div>
-    <div class="name-subtitle">
-      أهلاً بك! أدخل اسمك للمشاركة في سؤال اليوم.<br>
-      سيُعرض اسمك في قائمة الفائزين لدى المشرف.
-    </div>
+    <div class="name-subtitle">أهلاً بك! أدخل اسمك للمشاركة في سؤال اليوم.<br>سيُعرض اسمك في قائمة الفائزين لدى المشرف.</div>
     <div class="name-input-wrap">
       <label class="name-input-label">👤 اسمك الكامل</label>
       <input type="text" class="name-input" id="nameInput" placeholder="اكتب اسمك هنا..." maxlength="40" autocomplete="off" onkeydown="if(event.key==='Enter')enterQuiz()">
@@ -261,25 +195,13 @@
   </div>
 </div>
 
-<!-- LOCKED -->
-<div id="lockedOverlay">
-  <div class="lock-icon">🔒</div>
-  <div class="lock-title">انتهت فرصتك!</div>
-  <div class="lock-msg">غادرت الصفحة أثناء وقت السؤال.<br>لا يمكنك العودة للإجابة لضمان نزاهة المسابقة.</div>
-  <button class="lock-btn" onclick="document.body.innerHTML='<div style=\'font-family:Cairo;text-align:center;padding:80px;font-size:1.2rem;color:#E74C3C\'>🔒 تم إغلاق جلسة المسابقة</div>';window.close();">إغلاق الصفحة</button>
-</div>
-
 <!-- MAIN -->
 <div class="page" id="mainPage" style="display:none">
   <div class="progress-bar"><div class="progress-fill" id="progressBar"></div></div>
-
   <div class="header">
     <div class="logo">
       <div class="logo-icon">🏆</div>
-      <div>
-        <div class="logo-text">المسابقة الثقافية</div>
-        <div class="logo-sub">سؤال يومي • إجابة واحدة فقط</div>
-      </div>
+      <div><div class="logo-text">المسابقة الثقافية</div><div class="logo-sub">سؤال يومي • إجابة واحدة فقط</div></div>
     </div>
     <div class="header-right">
       <div class="player-name-badge" id="playerBadge">👤 —</div>
@@ -287,7 +209,6 @@
     </div>
   </div>
 
-  <!-- WAITING -->
   <div id="waitingState">
     <div class="wait-ring"><div class="wait-icon">⏳</div></div>
     <div class="wait-title">في انتظار السؤال</div>
@@ -295,11 +216,10 @@
     <div class="next-countdown" id="nextCountdown" style="display:none">
       <div class="next-label">⏰ الوقت المتبقي للسؤال القادم</div>
       <div class="next-time" id="nextTimeDisplay">--:--:--</div>
-      <div id="windowInfoBadge" style="display:none;margin-top:12px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);border-radius:8px;padding:8px 16px;font-size:0.85rem;color:var(--gold);font-weight:700;letter-spacing:1px;"></div>
+      <div id="windowInfoBadge" style="display:none;margin-top:12px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);border-radius:8px;padding:8px 16px;font-size:.85rem;color:var(--gold);font-weight:700;"></div>
     </div>
   </div>
 
-  <!-- QUESTION -->
   <div id="questionState">
     <div class="q-card">
       <div class="q-header">
@@ -328,7 +248,6 @@
     </div>
   </div>
 
-  <!-- RESULT -->
   <div id="resultState">
     <div class="result-icon" id="resultIcon"></div>
     <div class="result-player-name" id="resultPlayer"></div>
@@ -340,185 +259,172 @@
 </div>
 
 <script>
-// STARS
+// ===== CONFIG =====
+const STORAGE_KEY = 'quizScriptUrl';
+let SCRIPT_URL = localStorage.getItem(STORAGE_KEY) || '';
+
+// ===== STARS =====
 (function(){
   const c=document.getElementById('starsContainer');
   for(let i=0;i<90;i++){
     const s=document.createElement('div');s.className='star';
-    const sz=Math.random()*2.5+0.5;
+    const sz=Math.random()*2.5+.5;
     s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*5}s`;
     c.appendChild(s);
   }
 })();
 
-// ===== DEVICE FINGERPRINT =====
-function getDeviceFingerprint(){
-  // Get or create a persistent device ID
-  let devId = localStorage.getItem('__devId');
-  if(!devId){
-    // Build a fingerprint from browser characteristics
-    const fp = [
-      navigator.userAgent,
-      navigator.language,
-      screen.width + 'x' + screen.height,
-      screen.colorDepth,
-      Intl.DateTimeFormat().resolvedOptions().timeZone,
-      navigator.hardwareConcurrency||'',
-      navigator.platform||''
-    ].join('|');
-    // Simple hash
-    let hash = 0;
-    for(let i=0;i<fp.length;i++){ hash=(hash<<5)-hash+fp.charCodeAt(i); hash|=0; }
-    devId = 'dev_' + Math.abs(hash).toString(36) + '_' + Date.now().toString(36);
-    localStorage.setItem('__devId', devId);
+// ===== SETUP =====
+window.addEventListener('DOMContentLoaded', () => {
+  if (!SCRIPT_URL) { document.getElementById('setupOverlay').classList.remove('hidden'); return; }
+  document.getElementById('setupOverlay').style.display = 'none';
+  init();
+});
+
+async function savePlayerScriptUrl() {
+  const url = document.getElementById('playerScriptUrl').value.trim();
+  if (!url || !url.startsWith('https://script.google.com')) {
+    document.getElementById('playerSetupErr').classList.add('show'); return;
   }
-  return devId;
+  try {
+    const res = await fetch(url + '?action=getQuestions');
+    await res.json();
+    SCRIPT_URL = url;
+    localStorage.setItem(STORAGE_KEY, url);
+    document.getElementById('setupOverlay').style.display = 'none';
+    init();
+  } catch(e) {
+    document.getElementById('playerSetupErr').classList.add('show');
+  }
 }
 
-// ===== CHECK IF ALREADY PLAYED THIS QUESTION =====
-function getPlayedLog(){
-  try{ return JSON.parse(localStorage.getItem('__playedLog')||'{}'); }catch{ return {}; }
+// ===== API =====
+async function apiGet(action) {
+  const res = await fetch(SCRIPT_URL + '?action=' + action + '&t=' + Date.now());
+  return res.json();
 }
-function markAsPlayed(questionId, playerName, isCorrect, chosenOpt, usedSec, disqualified){
-  const log = getPlayedLog();
-  const key = getDeviceFingerprint() + '_' + questionId;
-  log[key] = { playerName, isCorrect, chosenOpt, usedSec, disqualified, timestamp: new Date().toISOString() };
+async function apiPost(data) {
+  const res = await fetch(SCRIPT_URL, { method:'POST', body:JSON.stringify(data) });
+  return res.json();
+}
+
+// ===== DEVICE FINGERPRINT =====
+function getDeviceId() {
+  let id = localStorage.getItem('__devId');
+  if (!id) {
+    const fp=[navigator.userAgent,navigator.language,screen.width+'x'+screen.height,screen.colorDepth,Intl.DateTimeFormat().resolvedOptions().timeZone,navigator.hardwareConcurrency||'',navigator.platform||''].join('|');
+    let h=0; for(let i=0;i<fp.length;i++){h=(h<<5)-h+fp.charCodeAt(i);h|=0;}
+    id='dev_'+Math.abs(h).toString(36)+'_'+Date.now().toString(36);
+    localStorage.setItem('__devId', id);
+  }
+  return id;
+}
+
+// ===== LOCAL LOCK CACHE (avoids repeated API calls) =====
+function getLocalPlayedLog() { try{return JSON.parse(localStorage.getItem('__playedLog')||'{}')}catch{return{}} }
+function setLocalPlayed(qId, data) {
+  const log = getLocalPlayedLog();
+  log[getDeviceId()+'_'+qId] = data;
   localStorage.setItem('__playedLog', JSON.stringify(log));
 }
-function hasAlreadyPlayed(questionId){
-  const log = getPlayedLog();
-  const key = getDeviceFingerprint() + '_' + questionId;
-  return log[key] || null;
-}
+function getLocalPlayed(qId) { return getLocalPlayedLog()[getDeviceId()+'_'+qId]||null; }
 
-// ===== SHOW ALREADY PLAYED SCREEN =====
-function showAlreadyPlayed(entry){
+// ===== STATE =====
+let playerName='', currentQuestion=null, timerInterval=null;
+let timeLeft=30, answered=false, questionActive=false, locked=false;
+let allQuestions=[];
+
+function showAlreadyPlayed(entry) {
   document.getElementById('nameScreen').style.display='none';
   document.getElementById('mainPage').style.display='none';
   document.getElementById('alreadyPlayedScreen').classList.add('show');
-  document.getElementById('playedNameDisplay').textContent = '👤 ' + entry.playerName;
-  const dt = new Date(entry.timestamp).toLocaleString('ar-SA');
-  document.getElementById('playedTimeDisplay').textContent = dt;
-  const rb = document.getElementById('playedResultBox');
-  if(entry.disqualified){
-    rb.className='played-result-box wrong'; rb.textContent='🚫 غادرت الصفحة — تم الاستبعاد';
-  } else if(entry.isCorrect){
-    rb.className='played-result-box correct'; rb.textContent=`✅ أجبت صحيح في ${entry.usedSec} ثانية`;
-  } else if(!entry.chosenOpt){
-    rb.className='played-result-box timeup'; rb.textContent='⏰ انتهى وقتك ولم تجب';
-  } else {
-    rb.className='played-result-box wrong'; rb.textContent='❌ أجبت خطأ';
-  }
+  document.getElementById('playedNameDisplay').textContent='👤 '+entry.playerName;
+  document.getElementById('playedTimeDisplay').textContent=new Date(entry.timestamp).toLocaleString('ar-SA');
+  const rb=document.getElementById('playedResultBox');
+  if(entry.disqualified){rb.className='played-result-box wrong';rb.textContent='🚫 غادرت الصفحة — تم الاستبعاد';}
+  else if(entry.isCorrect){rb.className='played-result-box correct';rb.textContent=`✅ أجبت صحيح في ${entry.usedSec} ثانية`;}
+  else if(!entry.chosenOpt){rb.className='played-result-box timeup';rb.textContent='⏰ انتهى وقتك ولم تجب';}
+  else{rb.className='played-result-box wrong';rb.textContent='❌ أجبت خطأ';}
 }
 
-// Check if already played when page first loads for the active question
-function checkAlreadyPlayedOnLoad(){
-  const qs = getQuestions();
+async function checkAlreadyPlayedOnLoad() {
   const now = Date.now();
-  for(const q of qs){
+  for (const q of allQuestions) {
     const winStart=new Date(q.datetime).getTime();
     const winEnd=q.endDatetime?new Date(q.endDatetime).getTime():winStart+(q.answerSeconds||30)*1000;
-    if(now>=winStart&&now<winEnd){
-      const entry=hasAlreadyPlayed(q.id);
-      if(entry){ showAlreadyPlayed(entry); return true; }
+    if (now>=winStart && now<winEnd) {
+      // Check local cache first
+      const local = getLocalPlayed(q.id);
+      if (local) { showAlreadyPlayed(local); return true; }
+      // Then check server
+      try {
+        const key = getDeviceId()+'_'+q.id;
+        const res = await apiGet('checkLock&key='+encodeURIComponent(key));
+        if (res.locked) { showAlreadyPlayed(res.data); return true; }
+      } catch(e) {}
     }
   }
   return false;
 }
 
-let playerName='', currentQuestion=null, timerInterval=null;
-let timeLeft=30, answered=false, questionActive=false, locked=false;
-let questionStartTime=null;
+// ===== INIT =====
+async function init() {
+  try { allQuestions = await apiGet('getQuestions'); } catch(e) { allQuestions=[]; }
+  const alreadyPlayed = await checkAlreadyPlayedOnLoad();
+  if (!alreadyPlayed) document.getElementById('nameInput').focus();
+  checkForActiveQuestion();
+  setInterval(refreshQuestions, 15000);
+  setInterval(checkForActiveQuestion, 3000);
+}
 
-// On page load — check if already played before showing name screen
-window.addEventListener('DOMContentLoaded',()=>{
-  if(checkAlreadyPlayedOnLoad()) return;
-  document.getElementById('nameInput').focus();
+async function refreshQuestions() {
+  try { allQuestions = await apiGet('getQuestions'); } catch(e) {}
+}
+
+// ===== LOCK PROTECTION =====
+let wasHidden=false;
+document.addEventListener('visibilitychange',()=>{
+  if(questionActive&&!answered){ if(document.hidden)wasHidden=true; else if(wasHidden)triggerLock(); }
 });
+window.addEventListener('blur',()=>{
+  if(questionActive&&!answered) setTimeout(()=>{ if(!document.hasFocus())triggerLock(); },300);
+});
+window.addEventListener('beforeunload',(e)=>{
+  if(questionActive&&!answered){ e.preventDefault(); e.returnValue='إذا غادرت الصفحة لن تتمكن من الإجابة!'; }
+});
+function triggerLock(){
+  if(locked)return; locked=true; questionActive=false; clearInterval(timerInterval);
+  saveResult(false,null,0,true);
+  document.getElementById('lockedOverlay').classList.add('show');
+}
 
-// NAME ENTRY
+// ===== NAME ENTRY =====
 function enterQuiz(){
   const input=document.getElementById('nameInput');
   const name=input.value.trim();
-  if(!name){
-    input.classList.add('error');
-    document.getElementById('nameError').classList.add('show');
-    input.focus();
-    setTimeout(()=>input.classList.remove('error'),600);
-    return;
-  }
-  // Re-check if already played (race condition guard)
-  if(checkAlreadyPlayedOnLoad()) return;
-
+  if(!name){input.classList.add('error');document.getElementById('nameError').classList.add('show');input.focus();setTimeout(()=>input.classList.remove('error'),600);return;}
   playerName=name;
   document.getElementById('nameScreen').classList.add('hide');
   document.getElementById('mainPage').style.display='flex';
   document.getElementById('playerBadge').textContent='👤 '+playerName;
   document.getElementById('qPlayerName').textContent='👤 '+playerName;
   document.getElementById('waitMsg').textContent=`مرحباً ${playerName}! سيظهر سؤال المسابقة في الوقت المحدد. كن مستعداً!`;
-  checkForActiveQuestion();
-  setInterval(checkForActiveQuestion,2000);
 }
 
-// LOCK PROTECTION
-let wasHidden=false;
-document.addEventListener('visibilitychange',()=>{
-  if(questionActive&&!answered){
-    if(document.hidden) wasHidden=true;
-    else if(wasHidden) triggerLock();
-  }
-});
-window.addEventListener('blur',()=>{
-  if(questionActive&&!answered)
-    setTimeout(()=>{ if(!document.hasFocus()) triggerLock(); },300);
-});
-window.addEventListener('beforeunload',(e)=>{
-  if(questionActive&&!answered){ e.preventDefault(); e.returnValue='إذا غادرت الصفحة لن تتمكن من الإجابة!'; }
-});
-function triggerLock(){
-  if(locked)return; locked=true; questionActive=false;
-  clearInterval(timerInterval);
-  saveResult(false,null,0,true);
-  document.getElementById('lockedOverlay').classList.add('show');
-}
-
-// DATA
-function getQuestions(){ try{return JSON.parse(localStorage.getItem('quizQuestions')||'[]');}catch{return[];} }
-
-function saveResult(isCorrect,chosenOpt,usedSeconds,disqualified){
-  try{
-    const results=JSON.parse(localStorage.getItem('quizResults')||'[]');
-    results.push({
-      questionId:currentQuestion?.id,
-      questionText:currentQuestion?.text,
-      playerName, isCorrect, chosenOpt, usedSeconds, disqualified,
-      deviceId: getDeviceFingerprint(),
-      timestamp:new Date().toISOString()
-    });
-    localStorage.setItem('quizResults',JSON.stringify(results));
-    // Mark device as played for this question
-    markAsPlayed(currentQuestion?.id, playerName, isCorrect, chosenOpt, usedSeconds, disqualified);
-  }catch(e){}
-}
-
-// MAIN LOOP — checks visibility window (endDatetime) only
+// ===== MAIN LOOP =====
 function checkForActiveQuestion(){
   if(locked||!playerName)return;
-  const qs=getQuestions(), now=Date.now();
-  for(const q of qs){
+  const now=Date.now();
+  for(const q of allQuestions){
     const winStart=new Date(q.datetime).getTime();
-    const winEnd=q.endDatetime ? new Date(q.endDatetime).getTime() : winStart + (q.answerSeconds||30)*1000;
-    // Within visibility window?
-    if(now>=winStart && now<winEnd){
-      if(!currentQuestion||currentQuestion.id!==q.id){
-        questionStartTime=now; // personal timer starts from NOW (when user enters)
-        startQuestion(q);
-      }
+    const winEnd=q.endDatetime?new Date(q.endDatetime).getTime():winStart+(q.answerSeconds||30)*1000;
+    if(now>=winStart&&now<winEnd){
+      if(!currentQuestion||String(currentQuestion.id)!==String(q.id)) startQuestion(q);
       return;
     }
   }
   if(questionActive) endQuestion();
-  const upcoming=qs.filter(q=>new Date(q.datetime).getTime()>now).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
+  const upcoming=allQuestions.filter(q=>new Date(q.datetime).getTime()>now).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
   if(upcoming.length){
     document.getElementById('nextCountdown').style.display='block';
     updateCountdown(new Date(upcoming[0].datetime).getTime());
@@ -526,11 +432,9 @@ function checkForActiveQuestion(){
     const sT=nq.timeStart||new Date(nq.datetime).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
     const eT=nq.timeEnd||(nq.endDatetime?new Date(nq.endDatetime).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'}):'');
     const wi=document.getElementById('windowInfoBadge');
-    if(wi&&eT){wi.innerHTML=`<span style="color:var(--gold)">🟢 ${sT}</span> &nbsp;←&nbsp; <span style="color:var(--red)">🔴 ${eT}</span>`;wi.style.display='block';}
+    if(wi&&eT){wi.innerHTML=`<span style="color:var(--gold)">🟢 ${sT}</span> ← <span style="color:var(--red)">🔴 ${eT}</span>`;wi.style.display='block';}
   } else {
     document.getElementById('nextCountdown').style.display='none';
-    const wi=document.getElementById('windowInfoBadge');
-    if(wi) wi.style.display='none';
   }
 }
 
@@ -542,15 +446,11 @@ function updateCountdown(t){
 }
 
 function startQuestion(q){
-  // Block if already played this question on this device
-  const prev = hasAlreadyPlayed(q.id);
-  if(prev){ showAlreadyPlayed(prev); return; }
-
-  currentQuestion=q; questionActive=true; answered=false; locked=false;
-  // Personal answer timer = answerSeconds (fixed per question by admin)
-  const personalTimer = q.answerSeconds || q.duration || 30;
-  timeLeft = personalTimer;
-
+  const prev=getLocalPlayed(q.id);
+  if(prev){showAlreadyPlayed(prev);return;}
+  currentQuestion=q;questionActive=true;answered=false;locked=false;
+  const personalTimer=parseInt(q.answerSeconds)||30;
+  timeLeft=personalTimer;
   document.getElementById('waitingState').style.display='none';
   document.getElementById('resultState').classList.remove('show');
   document.getElementById('questionState').classList.add('show');
@@ -560,19 +460,19 @@ function startQuestion(q){
   document.getElementById('textB').textContent=q.optB;
   document.getElementById('textC').textContent=q.optC;
   document.getElementById('textD').textContent=q.optD;
-  ['A','B','C','D'].forEach(l=>{ const b=document.getElementById('btn'+l); b.disabled=false; b.className='opt-btn'; });
-  startTimer(personalTimer, personalTimer);
+  ['A','B','C','D'].forEach(l=>{const b=document.getElementById('btn'+l);b.disabled=false;b.className='opt-btn';});
+  startTimer(personalTimer,personalTimer);
 }
 
 function startTimer(total,remaining){
-  clearInterval(timerInterval); updateTimerUI(remaining,total);
-  timerInterval=setInterval(()=>{ remaining--; timeLeft=remaining; updateTimerUI(remaining,total); if(remaining<=0){clearInterval(timerInterval);timeUp();} },1000);
+  clearInterval(timerInterval);updateTimerUI(remaining,total);
+  timerInterval=setInterval(()=>{remaining--;timeLeft=remaining;updateTimerUI(remaining,total);if(remaining<=0){clearInterval(timerInterval);timeUp();}},1000);
 }
 
 function updateTimerUI(remaining,total){
   const pct=remaining/total;
   document.getElementById('timerCircle').style.strokeDashoffset=188.5*(1-pct);
-  const color=pct>0.5?'#C9A84C':pct>0.25?'#E67E22':'#E74C3C';
+  const color=pct>.5?'#C9A84C':pct>.25?'#E67E22':'#E74C3C';
   document.getElementById('timerCircle').style.stroke=color;
   document.getElementById('timerText').textContent=remaining;
   document.getElementById('timerText').style.color=color;
@@ -581,21 +481,40 @@ function updateTimerUI(remaining,total){
 
 function answer(opt){
   if(answered||!questionActive)return;
-  answered=true; questionActive=false; clearInterval(timerInterval);
-  const correct=currentQuestion.correct, isCorrect=opt===correct;
-  const personalTimer = currentQuestion.answerSeconds || currentQuestion.duration || 30;
-  const usedSec = personalTimer - timeLeft;
-  ['A','B','C','D'].forEach(l=>{ const b=document.getElementById('btn'+l); b.disabled=true; if(l===correct)b.classList.add('correct'); else if(l===opt&&!isCorrect)b.classList.add('wrong'); });
+  answered=true;questionActive=false;clearInterval(timerInterval);
+  const correct=currentQuestion.correct,isCorrect=opt===correct;
+  const personalTimer=parseInt(currentQuestion.answerSeconds)||30;
+  const usedSec=personalTimer-timeLeft;
+  ['A','B','C','D'].forEach(l=>{const b=document.getElementById('btn'+l);b.disabled=true;if(l===correct)b.classList.add('correct');else if(l===opt&&!isCorrect)b.classList.add('wrong');});
   saveResult(isCorrect,opt,usedSec,false);
   setTimeout(()=>showResult(isCorrect,correct,false,usedSec),1500);
 }
 
 function timeUp(){
-  if(answered)return; answered=true; questionActive=false;
-  const personalTimer = currentQuestion.answerSeconds || currentQuestion.duration || 30;
-  ['A','B','C','D'].forEach(l=>{ const b=document.getElementById('btn'+l); b.disabled=true; if(l===currentQuestion.correct)b.classList.add('correct'); });
+  if(answered)return;answered=true;questionActive=false;
+  const personalTimer=parseInt(currentQuestion.answerSeconds)||30;
+  ['A','B','C','D'].forEach(l=>{const b=document.getElementById('btn'+l);b.disabled=true;if(l===currentQuestion.correct)b.classList.add('correct');});
   saveResult(false,null,personalTimer,false);
   setTimeout(()=>showResult(false,currentQuestion.correct,true,personalTimer),1200);
+}
+
+async function saveResult(isCorrect,chosenOpt,usedSeconds,disqualified){
+  const entry={playerName,isCorrect,chosenOpt,usedSec:usedSeconds,disqualified,timestamp:new Date().toISOString()};
+  // Save to local cache immediately
+  setLocalPlayed(currentQuestion.id, entry);
+  // Save to server
+  try {
+    const devId=getDeviceId();
+    const key=devId+'_'+currentQuestion.id;
+    await Promise.all([
+      apiPost({action:'saveResult',result:{
+        questionId:currentQuestion.id,questionText:currentQuestion.text,
+        playerName,isCorrect,chosenOpt,usedSeconds,disqualified,
+        deviceId:devId,timestamp:entry.timestamp
+      }}),
+      apiPost({action:'setLock',key,value:entry})
+    ]);
+  } catch(e){}
 }
 
 function showResult(isCorrect,correctOpt,timeup,usedSec){
@@ -634,7 +553,7 @@ function showResult(isCorrect,correctOpt,timeup,usedSec){
 }
 
 function endQuestion(){
-  questionActive=false; currentQuestion=null;
+  questionActive=false;currentQuestion=null;
   document.getElementById('questionState').classList.remove('show');
   document.getElementById('liveBadge').style.display='none';
   if(!answered) document.getElementById('waitingState').style.display='flex';
