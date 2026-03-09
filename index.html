@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>المسابقة الثقافية اليومية</title>
+<title>المسابقة الثقافية للعشر الأواخر لفريق الإتحاد الرياضي</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -193,11 +193,52 @@
   .correct-answer-reveal { margin-top:24px; background:rgba(46,204,113,0.08); border:1px solid rgba(46,204,113,0.3); border-radius:14px; padding:16px 28px; font-size:0.95rem; color:var(--green); }
 
   @media(max-width:600px){ .q-text{font-size:1.3rem;} .header{padding:14px 16px;} .q-body{padding:20px 16px;} .name-card{padding:36px 24px;} }
+
+  /* ALREADY PLAYED SCREEN */
+  #alreadyPlayedScreen {
+    position:fixed; inset:0; z-index:200;
+    display:none; align-items:center; justify-content:center;
+    background:var(--dark);
+    background-image:radial-gradient(ellipse at 50% 30%, rgba(231,76,60,0.07) 0%, transparent 60%);
+  }
+  #alreadyPlayedScreen.show { display:flex; }
+  .played-card {
+    width:100%; max-width:460px; margin:20px;
+    background:var(--dark2);
+    border:1px solid rgba(231,76,60,0.3);
+    border-radius:28px; padding:48px 40px; text-align:center;
+    position:relative; overflow:hidden;
+    box-shadow:0 40px 100px rgba(0,0,0,0.6);
+    animation:slideUp 0.7s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .played-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg, transparent, var(--red), transparent); }
+  .played-icon { font-size:4rem; margin-bottom:20px; animation:shake 0.6s ease; }
+  .played-title { font-family:'Amiri',serif; font-size:1.9rem; color:var(--red); margin-bottom:12px; }
+  .played-msg { color:var(--text-muted); font-size:0.95rem; line-height:1.8; margin-bottom:24px; }
+  .played-name { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:14px 20px; font-size:1rem; color:var(--text); font-weight:700; margin-bottom:20px; }
+  .played-result-box {
+    border-radius:12px; padding:16px 20px; margin-bottom:8px; font-size:0.9rem; font-weight:600;
+  }
+  .played-result-box.correct { background:rgba(46,204,113,0.1); border:1px solid rgba(46,204,113,0.3); color:var(--green); }
+  .played-result-box.wrong { background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); color:var(--red); }
+  .played-result-box.timeup { background:rgba(230,126,34,0.1); border:1px solid rgba(230,126,34,0.3); color:#E67E22; }
 </style>
 </head>
 <body>
 
 <div class="stars" id="starsContainer"></div>
+
+<!-- ALREADY PLAYED SCREEN -->
+<div id="alreadyPlayedScreen">
+  <div class="played-card">
+    <div class="played-icon">🚫</div>
+    <div class="played-title">شاركت مسبقاً!</div>
+    <div class="played-msg">لقد شاركت في سؤال اليوم من هذا الجهاز.<br>يُسمح بمشاركة واحدة فقط لكل جهاز لضمان نزاهة المسابقة.</div>
+    <div class="played-name" id="playedNameDisplay"></div>
+    <div class="played-result-box" id="playedResultBox"></div>
+    <div style="color:var(--text-muted);font-size:0.8rem;margin-top:16px;">⏰ وقت مشاركتك: <span id="playedTimeDisplay"></span></div>
+  </div>
+</div>
 
 <!-- NAME SCREEN -->
 <div id="nameScreen">
@@ -310,9 +351,90 @@
   }
 })();
 
+// ===== DEVICE FINGERPRINT =====
+function getDeviceFingerprint(){
+  // Get or create a persistent device ID
+  let devId = localStorage.getItem('__devId');
+  if(!devId){
+    // Build a fingerprint from browser characteristics
+    const fp = [
+      navigator.userAgent,
+      navigator.language,
+      screen.width + 'x' + screen.height,
+      screen.colorDepth,
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      navigator.hardwareConcurrency||'',
+      navigator.platform||''
+    ].join('|');
+    // Simple hash
+    let hash = 0;
+    for(let i=0;i<fp.length;i++){ hash=(hash<<5)-hash+fp.charCodeAt(i); hash|=0; }
+    devId = 'dev_' + Math.abs(hash).toString(36) + '_' + Date.now().toString(36);
+    localStorage.setItem('__devId', devId);
+  }
+  return devId;
+}
+
+// ===== CHECK IF ALREADY PLAYED THIS QUESTION =====
+function getPlayedLog(){
+  try{ return JSON.parse(localStorage.getItem('__playedLog')||'{}'); }catch{ return {}; }
+}
+function markAsPlayed(questionId, playerName, isCorrect, chosenOpt, usedSec, disqualified){
+  const log = getPlayedLog();
+  const key = getDeviceFingerprint() + '_' + questionId;
+  log[key] = { playerName, isCorrect, chosenOpt, usedSec, disqualified, timestamp: new Date().toISOString() };
+  localStorage.setItem('__playedLog', JSON.stringify(log));
+}
+function hasAlreadyPlayed(questionId){
+  const log = getPlayedLog();
+  const key = getDeviceFingerprint() + '_' + questionId;
+  return log[key] || null;
+}
+
+// ===== SHOW ALREADY PLAYED SCREEN =====
+function showAlreadyPlayed(entry){
+  document.getElementById('nameScreen').style.display='none';
+  document.getElementById('mainPage').style.display='none';
+  document.getElementById('alreadyPlayedScreen').classList.add('show');
+  document.getElementById('playedNameDisplay').textContent = '👤 ' + entry.playerName;
+  const dt = new Date(entry.timestamp).toLocaleString('ar-SA');
+  document.getElementById('playedTimeDisplay').textContent = dt;
+  const rb = document.getElementById('playedResultBox');
+  if(entry.disqualified){
+    rb.className='played-result-box wrong'; rb.textContent='🚫 غادرت الصفحة — تم الاستبعاد';
+  } else if(entry.isCorrect){
+    rb.className='played-result-box correct'; rb.textContent=`✅ أجبت صحيح في ${entry.usedSec} ثانية`;
+  } else if(!entry.chosenOpt){
+    rb.className='played-result-box timeup'; rb.textContent='⏰ انتهى وقتك ولم تجب';
+  } else {
+    rb.className='played-result-box wrong'; rb.textContent='❌ أجبت خطأ';
+  }
+}
+
+// Check if already played when page first loads for the active question
+function checkAlreadyPlayedOnLoad(){
+  const qs = getQuestions();
+  const now = Date.now();
+  for(const q of qs){
+    const winStart=new Date(q.datetime).getTime();
+    const winEnd=q.endDatetime?new Date(q.endDatetime).getTime():winStart+(q.answerSeconds||30)*1000;
+    if(now>=winStart&&now<winEnd){
+      const entry=hasAlreadyPlayed(q.id);
+      if(entry){ showAlreadyPlayed(entry); return true; }
+    }
+  }
+  return false;
+}
+
 let playerName='', currentQuestion=null, timerInterval=null;
 let timeLeft=30, answered=false, questionActive=false, locked=false;
 let questionStartTime=null;
+
+// On page load — check if already played before showing name screen
+window.addEventListener('DOMContentLoaded',()=>{
+  if(checkAlreadyPlayedOnLoad()) return;
+  document.getElementById('nameInput').focus();
+});
 
 // NAME ENTRY
 function enterQuiz(){
@@ -325,6 +447,9 @@ function enterQuiz(){
     setTimeout(()=>input.classList.remove('error'),600);
     return;
   }
+  // Re-check if already played (race condition guard)
+  if(checkAlreadyPlayedOnLoad()) return;
+
   playerName=name;
   document.getElementById('nameScreen').classList.add('hide');
   document.getElementById('mainPage').style.display='flex';
@@ -367,9 +492,12 @@ function saveResult(isCorrect,chosenOpt,usedSeconds,disqualified){
       questionId:currentQuestion?.id,
       questionText:currentQuestion?.text,
       playerName, isCorrect, chosenOpt, usedSeconds, disqualified,
+      deviceId: getDeviceFingerprint(),
       timestamp:new Date().toISOString()
     });
     localStorage.setItem('quizResults',JSON.stringify(results));
+    // Mark device as played for this question
+    markAsPlayed(currentQuestion?.id, playerName, isCorrect, chosenOpt, usedSeconds, disqualified);
   }catch(e){}
 }
 
@@ -414,6 +542,10 @@ function updateCountdown(t){
 }
 
 function startQuestion(q){
+  // Block if already played this question on this device
+  const prev = hasAlreadyPlayed(q.id);
+  if(prev){ showAlreadyPlayed(prev); return; }
+
   currentQuestion=q; questionActive=true; answered=false; locked=false;
   // Personal answer timer = answerSeconds (fixed per question by admin)
   const personalTimer = q.answerSeconds || q.duration || 30;
