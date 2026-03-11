@@ -434,8 +434,14 @@ function getDeviceId() {
 }
 function calcPoints(isCorrect, usedSeconds) {
   if (!isCorrect) return 0;
-  const bonus = Math.max(0, (90 - usedSeconds) / 90);
-  return parseFloat((2 + bonus).toFixed(3));
+  // نقاط السرعة الشخصية
+  const speedBonus = Math.max(0, (90 - usedSeconds) / 90);
+  // بونص الدخول المبكر: كل دقيقة تأخر تخصم 0.25، الحد الأدنى 0
+  const winStart = todayQuestions.length > 0 ? new Date(todayQuestions[0].datetime).getTime() : Date.now();
+  const delayMs  = Math.max(0, (entryTime || Date.now()) - winStart);
+  const delayMin = delayMs / 60000;
+  const earlyBonus = Math.max(0, 2 - delayMin * 0.25);  // أقصاه 2، ينتهي بعد 8 دقائق
+  return parseFloat((earlyBonus + speedBonus).toFixed(3));
 }
 function fmtPts(n) { return (+n).toFixed(2); }
 
@@ -505,6 +511,7 @@ let locked = false;
 let selectedOpt = null;
 let sessionAnswers = [];       // [{qId, isCorrect, points, usedSec, chosen}]
 let dayTotalPoints = 0;
+let entryTime = null;          // وقت الضغط على زر دخول المسابقة
 
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', async () => {
@@ -574,6 +581,7 @@ function showNewNameForm() {
 window.showNewNameForm = showNewNameForm;
 
 function proceedToMain() {
+  entryTime = Date.now();  // سجّل وقت الدخول
   document.getElementById('nameScreen').classList.add('hide');
   document.getElementById('mainPage').style.display = 'flex';
   document.getElementById('playerBadge').textContent = '👤 ' + playerName;
@@ -669,10 +677,26 @@ function loadQuestion(idx) {
   document.getElementById('qNumBadge').textContent = `السؤال ${idx+1} من ${todayQuestions.length}`;
   document.getElementById('qNumber').textContent = `السؤال ${idx+1} من ${todayQuestions.length}`;
   document.getElementById('qText').textContent = q.text;
-  document.getElementById('textA').textContent = q.optA;
-  document.getElementById('textB').textContent = q.optB;
-  document.getElementById('textC').textContent = q.optC;
-  document.getElementById('textD').textContent = q.optD;
+
+  // ترتيب عشوائي للخيارات لكل شخص
+  const origOpts = [
+    {key:'A', text:q.optA},
+    {key:'B', text:q.optB},
+    {key:'C', text:q.optC},
+    {key:'D', text:q.optD}
+  ];
+  // خلط بناءً على deviceId + وقت الدخول لثبات الترتيب لنفس الشخص في نفس السؤال
+  const seed = (getDeviceId() + q.id).split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const shuffled = [...origOpts].sort((a,b)=> Math.sin(seed * (origOpts.indexOf(a)+1)) - Math.sin(seed * (origOpts.indexOf(b)+1)));
+  // احفظ الخريطة: حرف الزر → المفتاح الأصلي
+  q._shuffleMap = {};
+  const dispLabels = ['A','B','C','D'];
+  shuffled.forEach((opt, i) => {
+    const L = dispLabels[i];
+    q._shuffleMap[L] = opt.key;  // زر A قد يكون الإجابة C أصلاً
+    document.getElementById('text'+L).textContent = opt.text;
+  });
+
   ['A','B','C','D'].forEach(l=>{
     const b=document.getElementById('btn'+l);
     b.disabled=false;
@@ -740,8 +764,12 @@ function timeUp() {
 
 function processAnswer(chosen, isTimeUp) {
   const q = currentQuestion;
+  // ترجم الحرف المعروض إلى المفتاح الأصلي
+  const chosenOrig  = (chosen && q._shuffleMap) ? q._shuffleMap[chosen] : chosen;
   const correct = q.correct;
-  const isCorrect = !isTimeUp && chosen === correct;
+  const isCorrect = !isTimeUp && chosenOrig === correct;
+  const chosen_display = chosen;   // الحرف كما ضغطه المستخدم على الشاشة
+  chosen = chosenOrig;             // الحرف الحقيقي للإجابة
   const usedSec = (parseInt(q.answerSeconds) || 30) - timeLeft;
   const points = calcPoints(isCorrect, usedSec);
 
@@ -754,7 +782,7 @@ function processAnswer(chosen, isTimeUp) {
     // لا نكشف الإجابة الصحيحة حتى لا ينقلها المتسابق لغيره
   });
 
-  sessionAnswers.push({ qId: q.id, qText: q.text, isCorrect, points, usedSec, chosen, correct });
+  sessionAnswers.push({ qId: q.id, qText: q.text, isCorrect, points, usedSec, chosen, correct, entryDelay: Math.round(Math.max(0,(entryTime||Date.now())-new Date(todayQuestions[0]?.datetime||Date.now()).getTime())/1000) });
   dayTotalPoints = parseFloat((dayTotalPoints + points).toFixed(3));
 
   // انتقل لشاشة نتيجة السؤال
