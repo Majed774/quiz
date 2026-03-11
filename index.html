@@ -441,11 +441,13 @@ function calcPoints(isCorrect, usedSeconds) {
 
 function calcEarlyBonus() {
   // خصم التأخير: كل دقيقة تأخر عن وقت الفتح = −0.25 من المجموع الكلي
-  // الحد الأدنى 0 (لا يصبح المجموع سالباً)
+  // يُحسب من sessionStartTime (وقت ظهور أول سؤال فعلياً)
   const winStart = todayQuestions.length > 0 ? new Date(todayQuestions[0].datetime).getTime() : Date.now();
-  const delayMs  = Math.max(0, (entryTime || Date.now()) - winStart);
+  const actualStart = sessionStartTime || Date.now();
+  const delayMs  = Math.max(0, actualStart - winStart);
   const delayMin = delayMs / 60000;
-  return parseFloat((-0.25 * delayMin).toFixed(3)); // قيمة سالبة أو صفر
+  const penalty  = -0.25 * delayMin;
+  return parseFloat(penalty.toFixed(3)); // قيمة سالبة أو صفر
 }
 function fmtPts(n) { return (+n).toFixed(2); }
 
@@ -516,6 +518,7 @@ let selectedOpt = null;
 let sessionAnswers = [];       // [{qId, isCorrect, points, usedSec, chosen}]
 let dayTotalPoints = 0;
 let entryTime = null;          // وقت الضغط على زر دخول المسابقة
+let sessionStartTime = null;   // وقت بدء الجلسة الفعلية (أول سؤال يظهر)
 
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', async () => {
@@ -653,6 +656,7 @@ function startSession() {
   currentQIndex = 0;
   sessionAnswers = [];
   dayTotalPoints = 0;
+  sessionStartTime = Date.now();  // سجّل وقت ظهور أول سؤال
   document.getElementById('qProgressStrip').style.display = 'flex';
   document.getElementById('liveBadge').style.display = 'flex';
   loadQuestion(0);
@@ -875,11 +879,17 @@ async function showDailySummary() {
 
   const correctCount = sessionAnswers.filter(a=>a.isCorrect).length;
   document.getElementById('summaryDate').textContent = new Date().toLocaleDateString('ar-SA', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  document.getElementById('summaryTotal').textContent = fmtPts(dayTotalPoints);
+  // احسب المجموع مع الخصم للعرض (saveDayResult تُحدّث dayTotalPoints لاحقاً)
+  const earlyForDisplay = calcEarlyBonus();
+  const displayTotal = parseFloat(Math.max(0, dayTotalPoints + earlyForDisplay).toFixed(3));
+  document.getElementById('summaryTotal').textContent = fmtPts(displayTotal);
   document.getElementById('summaryCorrect').textContent = `${correctCount}/3`;
 
   // تفاصيل كل سؤال
   const optLabel = {A:'أ',B:'ب',C:'ج',D:'د'};
+  const early = calcEarlyBonus();
+  const delayMin = sessionStartTime ? Math.max(0,(sessionStartTime - new Date(todayQuestions[0]?.datetime||Date.now()).getTime())/60000) : 0;
+
   document.getElementById('summaryQsList').innerHTML = sessionAnswers.map((a,i) => `
     <div class="summary-q-row">
       <div class="sq-num">${i+1}</div>
@@ -887,7 +897,14 @@ async function showDailySummary() {
       <div style="flex:1;font-size:.85rem;color:var(--text-muted);">${(a.qText||'').slice(0,45)}${a.qText&&a.qText.length>45?'...':''}</div>
       <div class="sq-pts">+${fmtPts(a.points)}</div>
     </div>
-  `).join('');
+  `).join('') + (early < 0 ? `
+    <div class="summary-q-row" style="background:linear-gradient(135deg,#FEF2F2,#FEE2E2);border:1.5px solid #FECACA;border-radius:10px;margin-top:6px;">
+      <div class="sq-num" style="background:linear-gradient(135deg,#DC2626,#F87171);">⏱</div>
+      <div class="sq-result">⚠️</div>
+      <div style="flex:1;font-size:.85rem;color:#DC2626;font-weight:700;">خصم التأخير (${Math.round(delayMin)} ${Math.round(delayMin)===1?'دقيقة':'دقائق'} تأخير)</div>
+      <div class="sq-pts" style="color:#DC2626;">${fmtPts(early)}</div>
+    </div>
+  ` : '');
 
   // حمّل الترتيب
   loadLeaderboard();
