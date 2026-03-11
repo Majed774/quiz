@@ -434,14 +434,18 @@ function getDeviceId() {
 }
 function calcPoints(isCorrect, usedSeconds) {
   if (!isCorrect) return 0;
-  // نقاط السرعة الشخصية
+  // بونص السرعة الشخصية فقط (بونص الدخول يُضاف للمجموع الكلي)
   const speedBonus = Math.max(0, (90 - usedSeconds) / 90);
-  // بونص الدخول المبكر: كل دقيقة تأخر تخصم 0.25، الحد الأدنى 0
+  return parseFloat((2 + speedBonus).toFixed(3));  // نقطتان ثابتتان + بونص السرعة
+}
+
+function calcEarlyBonus() {
+  // خصم التأخير: كل دقيقة تأخر عن وقت الفتح = −0.25 من المجموع الكلي
+  // الحد الأدنى 0 (لا يصبح المجموع سالباً)
   const winStart = todayQuestions.length > 0 ? new Date(todayQuestions[0].datetime).getTime() : Date.now();
   const delayMs  = Math.max(0, (entryTime || Date.now()) - winStart);
   const delayMin = delayMs / 60000;
-  const earlyBonus = Math.max(0, 2 - delayMin * 0.25);  // أقصاه 2، ينتهي بعد 8 دقائق
-  return parseFloat((earlyBonus + speedBonus).toFixed(3));
+  return parseFloat((-0.25 * delayMin).toFixed(3)); // قيمة سالبة أو صفر
 }
 function fmtPts(n) { return (+n).toFixed(2); }
 
@@ -843,9 +847,12 @@ window.goNextQuestion = goNextQuestion;
 // ===== SAVE DAY RESULT =====
 async function saveDayResult() {
   const devId = getDeviceId();
+  const early = calcEarlyBonus();
+  const totalWithBonus = parseFloat(Math.max(0, dayTotalPoints + early).toFixed(3));
   const dayResult = {
     playerName,
-    totalPoints: dayTotalPoints,
+    totalPoints: totalWithBonus,
+    earlyBonus: early,
     correctCount: sessionAnswers.filter(a=>a.isCorrect).length,
     answers: sessionAnswers,
     timestamp: new Date().toISOString(),
@@ -853,6 +860,8 @@ async function saveDayResult() {
     deviceId: devId
   };
   try { await fbSaveDayResult(devId, dayResult); } catch(e) {}
+  // حدّث dayTotalPoints للعرض
+  dayTotalPoints = totalWithBonus;
 }
 
 // ===== DAILY SUMMARY =====
