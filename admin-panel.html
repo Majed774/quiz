@@ -515,7 +515,7 @@ async function saveBankQuestion(){
     await fbSaveBank(q);
     showAlert('bankAlert', isEdit?'✅ تم تعديل السؤال بنجاح!':'✅ تمت إضافة السؤال للبنك!','success');
     cancelEdit();
-  }catch(e){ showAlert('bankAlert','❌ خطأ في الحفظ','error'); }
+  }catch(e){ showAlert('bankAlert','❌ خطأ في الحفظ: ' + e.message,'error'); console.error('Bank save error:',e); }
   hideLoad();
   document.getElementById('saveBankBtn').disabled=false;
 }
