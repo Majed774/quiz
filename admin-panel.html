@@ -507,7 +507,7 @@ async function saveBankQuestion(){
     correct:bankCorrect,
     answerSeconds:sec,
     createdAt: isEdit ? (bankQuestions.find(x=>x.id===editingId)?.createdAt||new Date().toISOString()) : new Date().toISOString(),
-    updatedAt: isEdit ? new Date().toISOString() : undefined
+    ...(isEdit && { updatedAt: new Date().toISOString() })
   };
   document.getElementById('saveBankBtn').disabled=true;
   showLoad(isEdit?'جاري حفظ التعديلات...':'جاري الحفظ...');
