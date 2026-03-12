@@ -48,8 +48,6 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
 .badge-live{background:#FCE7F3;border-color:#F9A8D4;color:var(--accent);display:none;align-items:center;gap:6px;}
 .live-dot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 1.5s infinite;}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
-.badge-refresh{background:linear-gradient(135deg,#EDE9FE,#DDD6FE);border-color:rgba(124,58,237,.3);color:var(--primary);cursor:pointer;transition:all .3s;}
-.badge-refresh:hover{background:#DDD6FE;}
 .last-update{font-size:.7rem;color:var(--text-light);margin-right:auto;}
 
 /* STATS */
@@ -189,7 +187,6 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
   <div class="header-badges">
     <div class="badge badge-view">👁️ عرض فقط</div>
     <div class="badge badge-live" id="liveBadge"><div class="live-dot"></div>بث مباشر</div>
-    <div class="badge badge-refresh" onclick="manualRefresh()">🔄 تحديث</div>
   </div>
   <div class="last-update">آخر تحديث: <span id="lastUpdateTime">—</span></div>
 </div>
@@ -283,13 +280,12 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
 
 </div>
 
-<!-- REFRESH BAR -->
+<!-- LIVE BAR -->
 <div class="refresh-bar">
   <div class="refresh-dot"></div>
-  <span>تحديث تلقائي كل 15 ثانية</span>
+  <span>تحديث لحظي — البيانات تتحدث تلقائياً</span>
   <span>•</span>
-  <span id="refreshCountdown">15</span>
-  <span>ثانية</span>
+  <span>آخر تحديث: <span id="liveUpdateTime">—</span></span>
 </div>
 
 <script type="module">
@@ -313,7 +309,6 @@ const db  = getDatabase(app);
 let bankQuestions = [];
 let scheduleData  = {};
 let allResults    = {};
-let refreshTimer  = 15;
 
 // ── PARTICLES ──
 (function(){
@@ -332,7 +327,10 @@ const todayStr = () => new Date().toISOString().split('T')[0];
 const fmtPts   = n  => (+n).toFixed(2);
 
 function updateLastTime(){
-  document.getElementById('lastUpdateTime').textContent = new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const t = new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('lastUpdateTime').textContent = t;
+  const liveEl = document.getElementById('liveUpdateTime');
+  if(liveEl) liveEl.textContent = t;
 }
 
 // ── INIT ── real-time listeners
@@ -353,13 +351,6 @@ window.addEventListener('DOMContentLoaded',()=>{
     // check if any day is live
     checkLive();
   });
-
-  // refresh countdown display
-  setInterval(()=>{
-    refreshTimer--;
-    if(refreshTimer<=0) refreshTimer=15;
-    document.getElementById('refreshCountdown').textContent = refreshTimer;
-  },1000);
 });
 
 function checkLive(){
@@ -371,9 +362,6 @@ function checkLive(){
   const e = new Date(`${t}T${d.timeEnd}`).getTime();
   document.getElementById('liveBadge').style.display = (now>=s && now<=e)?'flex':'none';
 }
-
-function manualRefresh(){ location.reload(); }
-window.manualRefresh = manualRefresh;
 
 // ── TABS ──
 function switchTab(tab, el){
